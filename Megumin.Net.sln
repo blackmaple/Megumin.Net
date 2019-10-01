@@ -43,8 +43,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject", "Test\Uni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Megumin.MessagePipeline", "Megumin.MessagePipeline\Megumin.MessagePipeline.csproj", "{E53FAFBD-AC71-4773-BCCE-9B9686E671F8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Megumin.Explosion", "Megumin.Explosion", "{756C12D6-F15D-4AC2-8292-3CDA22D081B7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
