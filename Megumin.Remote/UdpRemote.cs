@@ -249,7 +249,7 @@ namespace Megumin.Remote
 
         static (int SYN, int ACK, int seq, int ack) ReadConnectMessage(byte[] buffer)
         {
-            ReadOnlySpan<byte> bf = buffer.AsSpan(9);
+            ReadOnlySpan<byte> bf = buffer.AsSpan(11);
 
             int SYN = bf.ReadInt();
             int ACK = bf.Slice(4).ReadInt();
@@ -260,15 +260,18 @@ namespace Megumin.Remote
 
         static byte[] MakeUDPConnectMessage(int SYN, int ACT, int seq, int ack)
         {
-            var bf = new byte[25];
-            ((ushort)25).WriteTo(bf);
+            var bf = new byte[27];
+            ((ushort)27).WriteTo(bf);
             MSGID.UdpConnectMessageID.WriteTo(bf.AsSpan(2));
-            ((short)0).WriteTo(bf.AsSpan(6));
+            bf[6] = 1;
+            bf[7] = 0;
             bf[8] = 0;
-            int tempOffset = 9;
+            bf[9] = 0;
+            bf[10] = 0;
+            int tempOffset = 11;
             SYN.WriteTo(bf.AsSpan(tempOffset));
             ACT.WriteTo(bf.AsSpan(tempOffset + 4));
-            seq.WriteTo(bf.AsSpan(tempOffset + 8 ));
+            seq.WriteTo(bf.AsSpan(tempOffset + 8));
             ack.WriteTo(bf.AsSpan(tempOffset + 12));
             return bf;
         }
