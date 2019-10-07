@@ -14,18 +14,21 @@ namespace Megumin.Remote
     /// Rpc回调注册池
     /// 每个session大约每秒30个包，超时时间默认为30秒；
     /// </summary>
-    public class RpcCallbackPool : System.Collections.Concurrent.ConcurrentDictionary<long, (DateTime startTime, RpcCallback rpcCallback)>, IRpcCallbackPool
+    public class RpcCallbackPool : System.Collections.Concurrent.ConcurrentDictionary<int, (DateTime startTime, RpcCallback rpcCallback)>, IRpcCallbackPool
     {
-  
 
-        long rpcCursor = 0;
-        //readonly object rpcCursorLock = new object();
-
-        public RpcCallbackPool()
+        /// <summary>
+        /// 
+        /// </summary>
+        public RpcCallbackPool() : this(32)
         {
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="capacity"></param>
         public RpcCallbackPool(int capacity) : base(8, capacity)
         {
         }
@@ -34,7 +37,11 @@ namespace Megumin.Remote
         /// 默认30000ms
         /// </summary>
         public int RpcTimeOutMilliseconds { get; set; } = 30000;
-        delegate void RpcCallback(object message, Exception exception);
+
+
+        static readonly object lock_BuildRpcId = new object();
+        int rpcCursor = 0;
+
         /// <summary>
         /// 原子操作 取得RpcId,发送方的的RpcID为正数，回复的RpcID为负数，正负一一对应
         /// <para>0,int.MinValue 为无效值</para> 
@@ -42,26 +49,20 @@ namespace Megumin.Remote
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        long GetRpcID()
+        int GetRpcID()
         {
-            return Interlocked.Increment(ref rpcCursor);
-            // return Interlocked.CompareExchange(ref rpcCursor, 1, long.MaxValue);
-            //lock (rpcCursorLock)
-            //{
-            //    if (rpcCursor == int.MaxValue)
-            //    {
-            //        rpcCursor = 1;
-            //    }
-            //    else
-            //    {
-            //        rpcCursor++;
-            //    }
-
-            //    return rpcCursor;
-            //}
+            lock (lock_BuildRpcId)
+            {
+               return (this.rpcCursor == int.MaxValue) ? (this.rpcCursor = 1) : (++this.rpcCursor);
+            }
         }
 
-        public (long rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <returns></returns>
+        public (int rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
         {
             var rpcID = GetRpcID();
             var key = rpcID * -1;
@@ -103,16 +104,13 @@ namespace Megumin.Remote
             return (rpcID, source);
         }
 
-        //void CheckKeyConflict(long key)
-        //{
-        //    if (TryDequeue(key, out var callback))
-        //    {
-        //        ///如果出现RpcID冲突，认为前一个已经超时。
-        //        callback.rpcCallback?.Invoke(null, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
-        //    }
-        //}
-
-        public (long rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="OnException"></param>
+        /// <returns></returns>
+        public (int rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
         {
             var rpcID = GetRpcID();
             var key = rpcID * -1;
@@ -172,7 +170,7 @@ namespace Megumin.Remote
             ///同步调用，当返回消息返回时，会从回调池移除，
             ///那么计时器结束时将不会找到Task。如果调用出没有保持Task引用，
             ///那么Task会成为孤岛，被GC回收。
-
+            
             ///超时检查
             Task.Run(async () =>
             {
@@ -190,38 +188,43 @@ namespace Megumin.Remote
             });
         }
 
-        //readonly object dequeueLock = new object();
-        public bool TryDequeue(long rpcID, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rpcID"></param>
+        /// <param name="rpc"></param>
+        /// <returns></returns>
+        public bool TryDequeue(int rpcID, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
         {
             return this.TryRemove(rpcID, out rpc);
-
-            //lock (dequeueLock)
-            //{
-            //    if (TryGetValue(rpcID, out rpc))
-            //    {
-            //        Remove(rpcID);
-            //        return true;
-            //    }
-            //}
-
-            //return false;
         }
 
-        void IRpcCallbackPool.Remove(int rpcID) => Remove(rpcID);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rpcID"></param>
+        /// <param name="msg"></param>
+        /// <returns></returns>
         public bool TrySetResult(int rpcID, object msg)
         {
-            return TryComplate(rpcID, msg, null);
+            return TryComplate(rpcID, msg, default);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rpcID"></param>
+        /// <param name="exception"></param>
+        /// <returns></returns>
         public bool TrySetException(int rpcID, Exception exception)
         {
-            return TryComplate(rpcID, null, exception);
+            return TryComplate(rpcID, default, exception);
         }
 
         bool TryComplate(int rpcID, object msg, Exception exception)
         {
-            ///rpc响应
+            //rpc响应
             if (TryDequeue(rpcID, out var rpc))
             {
                 rpc.rpcCallback?.Invoke(msg, exception);
@@ -229,5 +232,17 @@ namespace Megumin.Remote
             }
             return false;
         }
+
+
+
+
+
+    }
+
+
+    internal class TimeOutService
+    {
+
+
     }
 }
