@@ -3,6 +3,7 @@ using Net.Remote;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Megumin.Remote
@@ -13,17 +14,19 @@ namespace Megumin.Remote
     /// Rpc回调注册池
     /// 每个session大约每秒30个包，超时时间默认为30秒；
     /// </summary>
-    public class RpcCallbackPool : Dictionary<int, (DateTime startTime, RpcCallback rpcCallback)>, IRpcCallbackPool
+    public class RpcCallbackPool : System.Collections.Concurrent.ConcurrentDictionary<long, (DateTime startTime, RpcCallback rpcCallback)>, IRpcCallbackPool
     {
-        int rpcCursor = 0;
-        readonly object rpcCursorLock = new object();
+  
+
+        long rpcCursor = 0;
+        //readonly object rpcCursorLock = new object();
 
         public RpcCallbackPool()
         {
 
         }
 
-        public RpcCallbackPool(int capacity) : base(capacity)
+        public RpcCallbackPool(int capacity) : base(8, capacity)
         {
         }
 
@@ -39,128 +42,121 @@ namespace Megumin.Remote
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int GetRpcID()
+        long GetRpcID()
         {
-            lock (rpcCursorLock)
+            return Interlocked.Increment(ref rpcCursor);
+            // return Interlocked.CompareExchange(ref rpcCursor, 1, long.MaxValue);
+            //lock (rpcCursorLock)
+            //{
+            //    if (rpcCursor == int.MaxValue)
+            //    {
+            //        rpcCursor = 1;
+            //    }
+            //    else
+            //    {
+            //        rpcCursor++;
+            //    }
+
+            //    return rpcCursor;
+            //}
+        }
+
+        public (long rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
+        {
+            var rpcID = GetRpcID();
+            var key = rpcID * -1;
+
+            IMiniAwaitable<(RpcResult result, Exception exception)> source = MiniTask<(RpcResult result, Exception exception)>.Rent();
+            this.AddOrUpdate(rpcID, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
-                if (rpcCursor == int.MaxValue)
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
+                return (DateTime.Now, DefRpcCallBack);
+            });
+
+            void DefRpcCallBack(object resp, Exception ex)
+            {
+                if (ex == null)
                 {
-                    rpcCursor = 1;
+                    if (resp is RpcResult result)
+                    {
+                        source.SetResult((result, null));
+                    }
+                    else if (resp == null)
+                    {
+                        source.SetResult((default, new NullReferenceException()));
+                    }
+                    else
+                    {
+                        ///转换类型错误
+                        source.SetResult((default,
+                            new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
+                            $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}")));
+                    }
                 }
                 else
                 {
-                    rpcCursor++;
+                    source.SetResult((default, ex));
                 }
 
-                return rpcCursor;
             }
-        }
-
-        public (int rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
-        {
-            int rpcID = GetRpcID();
-
-            IMiniAwaitable<(RpcResult result, Exception exception)> source = MiniTask<(RpcResult result, Exception exception)>.Rent();
-            var key = rpcID * -1;
-
-            CheckKeyConflict(key);
-
-            lock (dequeueLock)
-            {
-                this[key] = (DateTime.Now,
-                    (resp, ex) =>
-                    {
-                        if (ex == null)
-                        {
-                            if (resp is RpcResult result)
-                            {
-                                source.SetResult((result, null));
-                            }
-                            else
-                            {
-                                if (resp == null)
-                                {
-                                    source.SetResult((default, new NullReferenceException()));
-                                }
-                                else
-                                {
-                                    ///转换类型错误
-                                    source.SetResult((default, 
-                                        new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
-                                        $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}")));
-                                }
-
-                            }
-                        }
-                        else
-                        {
-                            source.SetResult((default, ex));
-                        }
-
-                        //todo
-                        //source 回收
-                    }
-                );
-            }
-
-            CreateCheckTimeout(key);
 
             return (rpcID, source);
         }
 
-        void CheckKeyConflict(int key)
-        {
-            if (TryDequeue(key, out var callback))
-            {
-                ///如果出现RpcID冲突，认为前一个已经超时。
-                callback.rpcCallback?.Invoke(null, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
-            }
-        }
+        //void CheckKeyConflict(long key)
+        //{
+        //    if (TryDequeue(key, out var callback))
+        //    {
+        //        ///如果出现RpcID冲突，认为前一个已经超时。
+        //        callback.rpcCallback?.Invoke(null, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
+        //    }
+        //}
 
-        public (int rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
+        public (long rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
         {
-            int rpcID = GetRpcID();
-            IMiniAwaitable<RpcResult> source = MiniTask<RpcResult>.Rent();
+            var rpcID = GetRpcID();
             var key = rpcID * -1;
 
-            CheckKeyConflict(key);
+            IMiniAwaitable<RpcResult> source = MiniTask<RpcResult>.Rent();
 
-            lock (dequeueLock)
+            //  CheckKeyConflict(key);
+
+            this.AddOrUpdate(rpcID, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
-                this[key] = (DateTime.Now,
-                    (resp, ex) =>
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
+                return (DateTime.Now, DefRpcCallBack);
+            });
+
+
+            void DefRpcCallBack(object resp, Exception ex)
+            {
+                if (ex == null)
+                {
+                    if (resp is RpcResult result)
                     {
-                        if (ex == null)
+                        source.SetResult(result);
+                    }
+                    else
+                    {
+                        source.CancelWithNotExceptionAndContinuation();
+                        if (resp == null)
                         {
-                            if (resp is RpcResult result)
-                            {
-                                source.SetResult(result);
-                            }
-                            else
-                            {
-                                source.CancelWithNotExceptionAndContinuation();
-                                if (resp == null)
-                                {
-                                    OnException?.Invoke(new NullReferenceException());
-                                }
-                                else
-                                {
-                                    ///转换类型错误
-                                    OnException?.Invoke(new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
-                                        $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}"));
-                                }
-                            }
+                            OnException?.Invoke(new NullReferenceException());
                         }
                         else
                         {
-                            source.CancelWithNotExceptionAndContinuation();
-                            OnException?.Invoke(ex);
+                            ///转换类型错误
+                            OnException?.Invoke(new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
+                                $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}"));
                         }
                     }
-                );
+                }
+                else
+                {
+                    source.CancelWithNotExceptionAndContinuation();
+                    OnException?.Invoke(ex);
+                }
             }
-
-            CreateCheckTimeout(key);
 
             return (rpcID, source);
         }
@@ -194,19 +190,21 @@ namespace Megumin.Remote
             });
         }
 
-        readonly object dequeueLock = new object();
-        public bool TryDequeue(int rpcID, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
+        //readonly object dequeueLock = new object();
+        public bool TryDequeue(long rpcID, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
         {
-            lock (dequeueLock)
-            {
-                if (TryGetValue(rpcID, out rpc))
-                {
-                    Remove(rpcID);
-                    return true;
-                }
-            }
+            return this.TryRemove(rpcID, out rpc);
 
-            return false;
+            //lock (dequeueLock)
+            //{
+            //    if (TryGetValue(rpcID, out rpc))
+            //    {
+            //        Remove(rpcID);
+            //        return true;
+            //    }
+            //}
+
+            //return false;
         }
 
         void IRpcCallbackPool.Remove(int rpcID) => Remove(rpcID);
@@ -221,7 +219,7 @@ namespace Megumin.Remote
             return TryComplate(rpcID, null, exception);
         }
 
-        bool TryComplate(int rpcID, object msg,Exception exception)
+        bool TryComplate(int rpcID, object msg, Exception exception)
         {
             ///rpc响应
             if (TryDequeue(rpcID, out var rpc))

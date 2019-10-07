@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Megumin.Remote</AssemblyName>
     <RootNamespace>Megumin.Remote</RootNamespace>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>云却</Authors>
     <Version>0.0.3</Version>
     <AssemblyVersion>0.0.3.0</AssemblyVersion>

@@ -10,7 +10,7 @@
     <Company></Company>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Copyright>Copyright (c) 2019 云却</Copyright>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseUrl>https://github.com/KumoKyaku/Megumin.Net/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/KumoKyaku/Megumin.Net</PackageProjectUrl>
     <PackageTags>net</PackageTags>

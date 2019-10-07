@@ -110,47 +110,47 @@ namespace Net.Remote
         /// </summary>
         /// <typeparam name="RpcResult"></typeparam>
         /// <returns></returns>
-        (int rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>();
+        (long rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>();
         /// <summary>
         /// 注册一个rpc过程，并返回一个rpcID，后续可通过rpcID完成回调
         /// </summary>
         /// <typeparam name="RpcResult"></typeparam>
         /// <param name="OnException"></param>
         /// <returns></returns>
-        (int rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException);
+        (long rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException);
         /// <summary>
         /// 取得rpc回调函数
         /// </summary>
         /// <param name="rpcID"></param>
         /// <param name="rpc"></param>
         /// <returns></returns>
-        bool TryGetValue(int rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
+        bool TryGetValue(long rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
         /// <summary>
         /// 取得rpc回调函数，并从rpc回调池中移除
         /// </summary>
         /// <param name="rpcID"></param>
         /// <param name="rpc"></param>
         /// <returns></returns>
-        bool TryDequeue(int rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
+        bool TryDequeue(long rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
         /// <summary>
         /// 从rpc回调池中移除
         /// </summary>
         /// <param name="rpcID"></param>
-        void Remove(int rpcID);
+        void Remove(long rpcID);
         /// <summary>
         /// 触发rpc回调
         /// </summary>
         /// <param name="rpcID"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        bool TrySetResult(int rpcID, object msg);
+        bool TrySetResult(long rpcID, object msg);
         /// <summary>
         /// 触发rpc回调
         /// </summary>
         /// <param name="rpcID"></param>
         /// <param name="exception"></param>
         /// <returns></returns>
-        bool TrySetException(int rpcID, Exception exception);
+        bool TrySetException(long rpcID, Exception exception);
     }
 
     /// <summary>

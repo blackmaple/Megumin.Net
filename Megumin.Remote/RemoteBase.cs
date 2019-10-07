@@ -21,7 +21,7 @@ namespace Megumin.Remote
         public bool IsVaild { get; protected set; } = true;
         public IPEndPoint ConnectIPEndPoint { get; set; }
         public DateTime LastReceiveTime { get; protected set; } = DateTime.Now;
-        public IRpcCallbackPool RpcCallbackPool { get; } = new RpcCallbackPool(31);
+        public IRpcCallbackPool RpcCallbackPool { get; } = new RpcCallbackPool(32);
         /// <summary>
         /// 当前是否为手动关闭中
         /// </summary>
