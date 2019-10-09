@@ -395,7 +395,7 @@ namespace Megumin.Message
             int start = HeaderOffset + extralength;
             //分离消息是使用报头描述的长度而不能依赖于Span长度
             var messageBody = buffer.Slice(start, totalLenght - start);
-            return (messageID, extraMessage, messageBody);
+            return ((EnumMessgaeId)messageID, extraMessage, messageBody);
         }
     }
 

@@ -28,10 +28,6 @@ namespace Megumin.Remote
         }
 
 
-        public enum EnumCustomMessageId : EnumMessgaeId
-        { 
-           
-        }
-        public class Enumxxx :Enum
+
     }
 }
