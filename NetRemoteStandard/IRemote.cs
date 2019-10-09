@@ -226,11 +226,11 @@ namespace Net.Remote
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="messgaeId"></param>
+    /// <param name="messageId"></param>
     /// <param name="message"></param>
     /// <param name="receiver"></param>
     /// <returns></returns>
-    public delegate ValueTask<object> ReceiveCallback (EnumMessgaeId messgaeId, object message,IReceiveMessage receiver);
+    public delegate ValueTask<object> ReceiveCallback (int messageId, object message,IReceiveMessage receiver);
     
     /// <summary>
     /// 接收消息

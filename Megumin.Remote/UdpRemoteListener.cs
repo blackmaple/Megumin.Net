@@ -51,7 +51,7 @@ namespace Megumin.Remote
             {
                 var res = await ReceiveAsync();
                 var (_, MessageID) = MessagePipeline.Default.ParsePacketHeader(res.Buffer);
-                if (MessageID == EnumMessgaeId.UdpConnectMessageID)
+                if (MessageID == MessageIdAttribute.UdpConnectMessageID)
                 {
                     ReMappingAsync(res);
                 }

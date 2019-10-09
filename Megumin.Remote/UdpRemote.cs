@@ -191,7 +191,7 @@ namespace Megumin.Remote
                 {
                     var recv = await udpClient.ReceiveAsync();
                     var (Size, MessageID) = Message.MessagePipeline.Default.ParsePacketHeader(recv.Buffer);
-                    if (MessageID == EnumMessgaeId.UdpConnectMessageID)
+                    if (MessageID == MessageIdAttribute.UdpConnectMessageID)
                     {
                         var (SYN, ACK, seq, ack) = ReadConnectMessage(recv.Buffer);
                         if (SYN == 1 && ACK == 1 && lastseq + 1 == ack)
@@ -292,7 +292,7 @@ namespace Megumin.Remote
         {
             var bf = new byte[27];
             ((ushort)27).WriteTo(bf);
-            ((int)EnumMessgaeId.UdpConnectMessageID).WriteTo(bf.AsSpan(2));
+            (MessageIdAttribute.UdpConnectMessageID).WriteTo(bf.AsSpan(2));
             bf[6] = 1;
             bf[7] = 0;
             bf[8] = 0;

@@ -34,7 +34,7 @@ namespace Megumin.Message
             }
         }
 
-        internal static IMiniAwaitable<object> Push(EnumMessgaeId messgaeId,int rpcID, object message, IObjectMessageReceiver r)
+        internal static IMiniAwaitable<object> Push(int messgaeId,int rpcID, object message, IObjectMessageReceiver r)
         {
             MiniTask<object> task1 = MiniTask<object>.Rent();
             async void action()

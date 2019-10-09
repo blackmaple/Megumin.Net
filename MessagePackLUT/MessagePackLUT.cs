@@ -36,7 +36,7 @@ namespace Megumin.Message
             var attribute = type.FirstAttribute<MessagePackObjectAttribute>();
             if (attribute != null)
             {
-                var MSGID = type.FirstAttribute<MsgIdAttribute>();
+                var MSGID = type.FirstAttribute<MessageIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist(type, MSGID.ID,
@@ -55,7 +55,7 @@ namespace Megumin.Message
             var attribute = type.FirstAttribute<MessagePackObjectAttribute>();
             if (attribute != null)
             {
-                var MSGID = type.FirstAttribute<MsgIdAttribute>();
+                var MSGID = type.FirstAttribute<MessageIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist<T>(MSGID.ID,

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Maple.CustomExplosions\Maple.CustomExplosions.csproj" />
+    <ProjectReference Include="..\NetRemoteStandard\NetRemoteStandard.csproj" />
+  </ItemGroup>
+
+</Project>

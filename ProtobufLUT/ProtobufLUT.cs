@@ -36,7 +36,7 @@ namespace Megumin.Message
         {
             if (type.IsSubclassOf(typeof(IMessage<>)))
             {
-                var MSGID = type.FirstAttribute<MsgIdAttribute>();
+                var MSGID = type.FirstAttribute<MessageIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist(type, MSGID.ID,
@@ -53,7 +53,7 @@ namespace Megumin.Message
             where T:IMessage<T>
         {
             var type = typeof(T);
-            var MSGID = type.FirstAttribute<MsgIdAttribute>();
+            var MSGID = type.FirstAttribute<MessageIdAttribute>();
             if (MSGID != null)
             {
                 Regist<T>(MSGID.ID,

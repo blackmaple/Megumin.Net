@@ -70,7 +70,7 @@ namespace Megumin.Message
         /// <param name="rpcID"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        ValueTask<object> Deal(EnumMessgaeId messageID, int rpcID, object message);
+        ValueTask<object> Deal(int messageID, int rpcID, object message);
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ namespace Megumin.Message
         /// <param name="messageID"></param>
         /// <param name="messageBody"></param>
         /// <returns></returns>
-        (int rpcID, object message) Deserialize(EnumMessgaeId messageID,in ReadOnlyMemory<byte> messageBody);
+        (int rpcID, object message) Deserialize(int messageID,in ReadOnlyMemory<byte> messageBody);
         /// <summary>
         /// 序列化
         /// </summary>
@@ -92,6 +92,6 @@ namespace Megumin.Message
         /// <param name="rpcID"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        (EnumMessgaeId messageID, ushort length) Serialize(object message, int rpcID, Span<byte> span);
+        (int messageID, ushort length) Serialize(object message, int rpcID, Span<byte> span);
     }
 }

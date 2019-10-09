@@ -33,7 +33,7 @@ namespace ServerApp
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public static async ValueTask<object> DealMessage(EnumMessgaeId messageId,object message,IReceiveMessage receiver)
+        public static async ValueTask<object> DealMessage(int messageId,object message,IReceiveMessage receiver)
         {
             switch (message)
             {
