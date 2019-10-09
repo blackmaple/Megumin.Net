@@ -10,7 +10,7 @@
     <Product>MeguminNet</Product>
     <Authors>云却</Authors>
     <Version>0.0.2</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <RootNamespace>Megumin.Message</RootNamespace>
     <PackageTags>net</PackageTags>
     <SignAssembly>true</SignAssembly>

@@ -41,7 +41,7 @@ namespace UnitFunc
                 using (var buffer = BufferPool.Rent(1024))
                 {
                     var length = MessageLUT.Serialize(login2Gate, buffer.Memory.Span);
-                    var res = MessageLUT.Deserialize(1003, buffer.Memory.Slice(0,length.length)) as Login2Gate;
+                    var res = MessageLUT.Deserialize((EnumMessgaeId)1003, buffer.Memory.Slice(0, length.length)) as Login2Gate;
                     Assert.AreEqual(login2Gate.Account, res.Account);
                     Assert.AreEqual(login2Gate.Password, res.Password);
                 }

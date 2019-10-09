@@ -10,6 +10,9 @@ namespace Megumin.Remote
     /// </summary>
     public class KcpRemoteListener:IMultiplexing
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public int MultiplexingCount { get; set; } = 1;
     }
 }

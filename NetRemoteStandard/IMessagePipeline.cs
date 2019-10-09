@@ -1,11 +1,8 @@
-﻿using System;
+﻿using Net.Remote;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Text;
-using System.Buffers;
-using System.Buffers.Binary;
 using System.Threading.Tasks;
-using Net.Remote;
 
 namespace Megumin.Message
 {
@@ -69,10 +66,11 @@ namespace Megumin.Message
         /// <summary>
         /// 处理消息实例
         /// </summary>
+        /// <param name="messageID"></param>
         /// <param name="rpcID"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        ValueTask<object> Deal(int rpcID, object message);
+        ValueTask<object> Deal(EnumMessgaeId messageID, int rpcID, object message);
     }
 
     /// <summary>
@@ -86,7 +84,7 @@ namespace Megumin.Message
         /// <param name="messageID"></param>
         /// <param name="messageBody"></param>
         /// <returns></returns>
-        (int rpcID, object message) Deserialize(int messageID,in ReadOnlyMemory<byte> messageBody);
+        (int rpcID, object message) Deserialize(EnumMessgaeId messageID,in ReadOnlyMemory<byte> messageBody);
         /// <summary>
         /// 序列化
         /// </summary>
@@ -94,6 +92,6 @@ namespace Megumin.Message
         /// <param name="rpcID"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        (int messageID, ushort length) Serialize(object message, int rpcID, Span<byte> span);
+        (EnumMessgaeId messageID, ushort length) Serialize(object message, int rpcID, Span<byte> span);
     }
 }

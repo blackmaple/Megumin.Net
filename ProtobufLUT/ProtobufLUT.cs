@@ -36,7 +36,7 @@ namespace Megumin.Message
         {
             if (type.IsSubclassOf(typeof(IMessage<>)))
             {
-                var MSGID = type.FirstAttribute<MSGID>();
+                var MSGID = type.FirstAttribute<MsgIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist(type, MSGID.ID,
@@ -53,7 +53,7 @@ namespace Megumin.Message
             where T:IMessage<T>
         {
             var type = typeof(T);
-            var MSGID = type.FirstAttribute<MSGID>();
+            var MSGID = type.FirstAttribute<MsgIdAttribute>();
             if (MSGID != null)
             {
                 Regist<T>(MSGID.ID,
@@ -83,7 +83,7 @@ namespace Megumin.Message
         public static ushort Serialize<T>(T obj, Span<byte> buffer)
             where T:IMessage<T>
         {
-            ///等待序列化类库支持Span.
+            //等待序列化类库支持Span.
             using (CodedOutputStream co = new CodedOutputStream(CacheBuffer))
             {
                 obj.WriteTo(co);

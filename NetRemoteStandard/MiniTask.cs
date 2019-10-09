@@ -28,6 +28,11 @@ namespace System.Threading.Tasks
         public static int MaxCount { get; set; } = 512;
 
         static ConcurrentQueue<MiniTask<T>> pool = new ConcurrentQueue<MiniTask<T>>();
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public static MiniTask<T> Rent()
         {
             if (pool.TryDequeue(out var task))
@@ -42,6 +47,9 @@ namespace System.Threading.Tasks
             return new MiniTask<T>() { state = State.Waiting };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void ClearPool()
         {
             lock (pool)
@@ -62,6 +70,9 @@ namespace System.Threading.Tasks
         /// </summary>
         private bool alreadyEnterAsync = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsCompleted => state == State.Success || state == State.Faild;
         /// <summary>
         /// 请不要同步访问Result。即使同步完成也应该使用await 关键字。同步访问可能无法取得正确的值，或抛出异常。
@@ -69,13 +80,17 @@ namespace System.Threading.Tasks
         public T Result { get; protected set; }
         readonly object innerlock = new object();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="continuation"></param>
         public void UnsafeOnCompleted(Action continuation)
         {
             lock (innerlock)
             {
                 if (state == State.InPool)
                 {
-                    ///这里被触发一定是是类库BUG。
+                    //这里被触发一定是是类库BUG。
                     throw new ArgumentException($"{nameof(MiniTask<T>)} task conflict, underlying error, please contact the framework author." +
                         $"/{nameof(MiniTask<T>)}任务冲突，底层错误，请联系框架作者。");
                 }
@@ -87,13 +102,17 @@ namespace System.Threading.Tasks
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="continuation"></param>
         public void OnCompleted(Action continuation)
         {
             lock (innerlock)
             {
                 if (state == State.InPool)
                 {
-                    ///这里被触发一定是是类库BUG。
+                    //这里被触发一定是是类库BUG。
                     throw new ArgumentException($"{nameof(MiniTask<T>)} task conflict, underlying error, please contact the framework author." +
                         $"/{nameof(MiniTask<T>)}任务冲突，底层错误，请联系框架作者。");
                 }
@@ -105,6 +124,10 @@ namespace System.Threading.Tasks
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="result"></param>
         public void SetResult(T result)
         {
             lock (innerlock)
@@ -133,11 +156,14 @@ namespace System.Threading.Tasks
                     continuation?.Invoke();
                 }
 
-                ///处理后续方法结束，归还到池中
+                //处理后续方法结束，归还到池中
                 this.Return();
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void CancelWithNotExceptionAndContinuation()
         {
             lock (innerlock)
@@ -163,10 +189,10 @@ namespace System.Threading.Tasks
 
             if (state != State.InPool)
             {
-                ///state = State.InPool;必须在pool.Enqueue(this);之前。
-                ///因为当pool为空的时候，放入池的元素会被立刻取出。并将状态设置为Waiting。
-                ///如果state = State.InPool;在pool.Enqueue(this)后，那么会导致Waiting 状态被错误的设置为InPool;
-                /// **** 我在这里花费了4个小时（sad）。
+                //state = State.InPool;必须在pool.Enqueue(this);之前。
+                //因为当pool为空的时候，放入池的元素会被立刻取出。并将状态设置为Waiting。
+                //如果state = State.InPool;在pool.Enqueue(this)后，那么会导致Waiting 状态被错误的设置为InPool;
+                // **** 我在这里花费了4个小时（sad）。
                 state = State.InPool;
 
 #if DEBUG

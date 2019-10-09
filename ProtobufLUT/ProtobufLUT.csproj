@@ -5,7 +5,7 @@
     <AssemblyName>Megumin.ProtobufLUT</AssemblyName>
     <RootNamespace>Megumin.Message</RootNamespace>
     <Version>0.0.2</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Authors>云却</Authors>
     <Product>MeguminNet</Product>
     <Description>MeguminNet中的消息序列化部分。</Description>

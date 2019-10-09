@@ -15,10 +15,25 @@ namespace Megumin.Remote
     /// </summary>
     public partial class UdpRemote : RemoteBase, IRemote
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public Socket Client => udpClient?.Client;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public UdpClient udpClient;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public EndPoint RemappedEndPoint => udpClient?.Client.RemoteEndPoint;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addressFamily"></param>
         public UdpRemote(AddressFamily addressFamily = AddressFamily.InterNetworkV6) :
             this(new UdpClient(0, addressFamily))
         {
@@ -40,6 +55,10 @@ namespace Megumin.Remote
         #region IDisposable Support
         private bool disposedValue = false; // 要检测冗余调用
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -64,6 +83,10 @@ namespace Megumin.Remote
         // }
 
         // 添加此代码以正确实现可处置模式。
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
             // 请勿更改此代码。将清理代码放入以上 Dispose(bool disposing) 中。
@@ -78,6 +101,9 @@ namespace Megumin.Remote
     ///连接
     partial class UdpRemote
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public event Action<SocketError> OnDisConnect;
 
         bool isConnecting = false;
@@ -98,7 +124,7 @@ namespace Megumin.Remote
 
             if (this.Client.AddressFamily != endPoint.AddressFamily)
             {
-                ///IP版本转换
+                //IP版本转换
                 this.ConnectIPEndPoint = new IPEndPoint(
                     this.Client.AddressFamily == AddressFamily.InterNetworkV6 ? endPoint.Address.MapToIPv6() :
                     endPoint.Address.MapToIPv4(), endPoint.Port);
@@ -138,6 +164,9 @@ namespace Megumin.Remote
             return new SocketException((int)SocketError.TimedOut);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Disconnect()
         {
             IsVaild = false;
@@ -162,12 +191,12 @@ namespace Megumin.Remote
                 {
                     var recv = await udpClient.ReceiveAsync();
                     var (Size, MessageID) = Message.MessagePipeline.Default.ParsePacketHeader(recv.Buffer);
-                    if (MessageID == MSGID.UdpConnectMessageID)
+                    if (MessageID == EnumMessgaeId.UdpConnectMessageID)
                     {
                         var (SYN, ACK, seq, ack) = ReadConnectMessage(recv.Buffer);
                         if (SYN == 1 && ACK == 1 && lastseq + 1 == ack)
                         {
-                            ///ESTABLISHED
+                            //ESTABLISHED
 
                             udpClient.Connect(recv.RemoteEndPoint);
                             break;
@@ -192,7 +221,7 @@ namespace Megumin.Remote
             Task.Run(async () =>
             {
                 await Task.Delay(5000, source.Token);
-                ///一段时间没有反应，默认失败。
+                //一段时间没有反应，默认失败。
                 source.Cancel();
                 taskCompletion.TrySetException(new TimeoutException());
 
@@ -204,26 +233,27 @@ namespace Megumin.Remote
             return await taskCompletion.Task;
         }
 
+
         internal async Task<bool> TryAccept(UdpReceiveResult udpReceive)
         {
             if (Client.Connected && this.Client.RemoteEndPoint.Equals(udpReceive.RemoteEndPoint))
             {
-                ///已经成功连接，忽略连接请求
+                //已经成功连接，忽略连接请求
                 return true;
             }
 
-            ///LISTEN;
+            //LISTEN;
             var (SYN, ACK, seq, ack) = ReadConnectMessage(udpReceive.Buffer);
 
             if (SYN == 1 && ACK == 0)
             {
-                ///SYN_RCVD;
+                //SYN_RCVD;
                 lastack = new Random().Next(0, 10000);
                 lastseq = seq;
 
                 ConnectIPEndPoint = udpReceive.RemoteEndPoint;
 
-                ///绑定远端
+                //绑定远端
                 udpClient.Connect(udpReceive.RemoteEndPoint);
                 var buffer = MakeUDPConnectMessage(1, 1, lastack, seq + 1);
 
@@ -242,7 +272,7 @@ namespace Megumin.Remote
             }
             else
             {
-                ///INVALID;
+                //INVALID;
                 return false;
             }
         }
@@ -262,7 +292,7 @@ namespace Megumin.Remote
         {
             var bf = new byte[27];
             ((ushort)27).WriteTo(bf);
-            MSGID.UdpConnectMessageID.WriteTo(bf.AsSpan(2));
+            ((int)EnumMessgaeId.UdpConnectMessageID).WriteTo(bf.AsSpan(2));
             bf[6] = 1;
             bf[7] = 0;
             bf[8] = 0;
@@ -314,6 +344,11 @@ namespace Megumin.Remote
             
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="msgBuffer"></param>
+        /// <returns></returns>
         public Task BroadCastSendAsync(ArraySegment<byte> msgBuffer)
         {
             if (msgBuffer.Offset == 0)
@@ -321,7 +356,7 @@ namespace Megumin.Remote
                 return udpClient.SendAsync(msgBuffer.Array, msgBuffer.Count);
             }
 
-            ///此处几乎用不到，省掉一个async。
+            //此处几乎用不到，省掉一个async。
             var buffer = new byte[msgBuffer.Count];
             Buffer.BlockCopy(msgBuffer.Array, msgBuffer.Offset, buffer, 0, msgBuffer.Offset);
             return udpClient.SendAsync(buffer, msgBuffer.Count);
@@ -331,7 +366,14 @@ namespace Megumin.Remote
     /// 接收
     partial class UdpRemote
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public bool isReceiving = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public override void ReceiveStart()
         {
             if (!Client.Connected || isReceiving)
@@ -357,7 +399,7 @@ namespace Megumin.Remote
                     LastReceiveTime = DateTime.Now;
                     if (IsVaild)
                     {
-                        ///递归，继续接收
+                        //递归，继续接收
                         ReceiveAsync(BufferPool.Rent(MaxBufferLength));
                     }
 
@@ -388,8 +430,17 @@ namespace Megumin.Remote
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public static class UDPClientEx_102F7D01C985465EB23822F83FDE9C75
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="udp"></param>
+        /// <param name="receiveBuffer"></param>
+        /// <returns></returns>
         public static Task<UdpReceiveResult_E74D> ReceiveAsync(this UdpClient udp, ArraySegment<byte> receiveBuffer)
         {
             return Task<UdpReceiveResult_E74D>.Factory.FromAsync(
@@ -405,6 +456,9 @@ namespace Megumin.Remote
                 state: udp);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         internal static class IPEndPointStatics_9931EFCAB48741B998C533DF851CB575
         {
             internal const int AnyPort = IPEndPoint.MinPort;
@@ -412,6 +466,14 @@ namespace Megumin.Remote
             internal static readonly IPEndPoint IPv6Any = new IPEndPoint(IPAddress.IPv6Any, AnyPort);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="udp"></param>
+        /// <param name="requestCallback"></param>
+        /// <param name="state"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         public static IAsyncResult BeginReceive(this UdpClient udp, AsyncCallback requestCallback, object state, ArraySegment<byte> buffer)
         {
             // Due to the nature of the ReceiveFrom() call and the ref parameter convention,

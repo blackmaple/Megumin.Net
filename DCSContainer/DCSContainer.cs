@@ -8,13 +8,23 @@ using Net.Remote;
 
 namespace Megumin.DCS
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public partial class DCSContainer
     {
+        /// <summary>
+        /// 
+        /// </summary>
         protected readonly static DCSContainer Instance = new DCSContainer();
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static IContainer MainContainer;
 
         int GUID = 0;
+
         private async Task<int> GetNewSeviceIDAsync()
         {
             return GUID++;
@@ -22,6 +32,11 @@ namespace Megumin.DCS
 
         List<IPAddress> iPAddresses = new List<IPAddress>();
         Dictionary<int, IService> serviceDic = new Dictionary<int, IService>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="service"></param>
         public static async void AddService(IService service)
         {
             service.GUID = await Instance.GetNewSeviceIDAsync();
@@ -30,11 +45,18 @@ namespace Megumin.DCS
             //await Sockets.BroadCastAsync(new Login(), MainContainer.Sockets);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static void Init()
         {
             
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public static async Task Start()
         {
             Instance.iPAddresses.Add(IPAddress.IPv6Loopback);
@@ -86,6 +108,9 @@ namespace Megumin.DCS
 
         private DCSContainer() { }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public IRemote Remote { get; private set; } = new TcpRemote();
         /// <summary>
         /// 起始端口
@@ -97,12 +122,17 @@ namespace Megumin.DCS
         public IPAddress MainIP { get; private set; } = IPAddress.IPv6Loopback;
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class TestMessage
     {
 
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class TestMessage2
     {
 

@@ -4,6 +4,7 @@ using Message;
 using Megumin.DCS;
 using Megumin.Remote;
 using Net.Remote;
+using Megumin.Message;
 
 namespace ServerApp
 {
@@ -25,7 +26,14 @@ namespace ServerApp
             StartListenAsync();
         }
 
-        public static async ValueTask<object> DealMessage(object message,IReceiveMessage receiver)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messageId"></param>
+        /// <param name="message"></param>
+        /// <param name="receiver"></param>
+        /// <returns></returns>
+        public static async ValueTask<object> DealMessage(EnumMessgaeId messageId,object message,IReceiveMessage receiver)
         {
             switch (message)
             {

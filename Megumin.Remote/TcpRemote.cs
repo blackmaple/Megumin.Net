@@ -20,7 +20,14 @@ namespace Megumin.Remote
     /// </summary>
     public partial class TcpRemote : RemoteBase,  IRemote
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public Socket Client { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public EndPoint RemappedEndPoint => Client.RemoteEndPoint;
 
         /// <summary>
@@ -41,11 +48,20 @@ namespace Megumin.Remote
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messagePipeline"></param>
         public TcpRemote(IMessagePipeline messagePipeline) : this(new Socket(SocketType.Stream, ProtocolType.Tcp))
         {
             MessagePipeline = messagePipeline;
         }
 
+        /// <summary>
+        /// /
+        /// </summary>
+        /// <param name="messagePipeline"></param>
+        /// <param name="addressFamily"></param>
         public TcpRemote(IMessagePipeline messagePipeline, AddressFamily addressFamily)
             : this(new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp))
         {
@@ -88,6 +104,10 @@ namespace Megumin.Remote
         #region IDisposable Support
         private bool disposedValue = false; // 要检测冗余调用
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -126,7 +146,9 @@ namespace Megumin.Remote
                 disposedValue = true;
             }
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
         // TODO: 仅当以上 Dispose(bool disposing) 拥有用于释放未托管资源的代码时才替代终结器。
         ~TcpRemote()
         {
@@ -134,7 +156,9 @@ namespace Megumin.Remote
             Dispose(false);
         }
 
-        // 添加此代码以正确实现可处置模式。
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
             // 请勿更改此代码。将清理代码放入以上 Dispose(bool disposing) 中。
@@ -148,9 +172,19 @@ namespace Megumin.Remote
     ///连接 断开连接
     partial class TcpRemote:IConnectable
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public event Action<SocketError> OnDisConnect;
 
         bool isConnecting = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="retryCount"></param>
+        /// <returns></returns>
         public async Task<Exception> ConnectAsync(IPEndPoint endPoint, int retryCount = 0)
         {
             if (isConnecting)
@@ -186,6 +220,9 @@ namespace Megumin.Remote
             return new NullReferenceException();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Disconnect()
         {
             IsVaild = false;
@@ -197,6 +234,11 @@ namespace Megumin.Remote
     /// 发送实例消息
     partial class TcpRemote
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="msgBuffer"></param>
+        /// <returns></returns>
         public Task BroadCastSendAsync(ArraySegment<byte> msgBuffer) => Client.SendAsync(msgBuffer, SocketFlags.None);
     }
 
@@ -206,6 +248,9 @@ namespace Megumin.Remote
         ConcurrentQueue<IMemoryOwner<byte>> sendWaitList = new ConcurrentQueue<IMemoryOwner<byte>>();
         bool isSending;
         private MemoryArgs sendArgs;
+        /// <summary>
+        /// 
+        /// </summary>
         protected readonly object sendlock = new object();
         
         /// <summary>
@@ -233,7 +278,7 @@ namespace Megumin.Remote
                 return false;
             }
 
-            ///如果待发送队列有消息，交换列表 ，继续发送
+            //如果待发送队列有消息，交换列表 ，继续发送
             lock (sendlock)
             {
                 if (sendWaitList.Count > 0 && !manualDisconnecting && isSending == false)
@@ -276,16 +321,16 @@ namespace Megumin.Remote
 
         void SendComplete(object sender, SocketAsyncEventArgs args)
         {
-            ///这个方法由IOCP线程调用。需要尽快结束。
+            //这个方法由IOCP线程调用。需要尽快结束。
             args.Completed -= SendComplete;
             isSending = false;
 
-            ///无论成功失败，都要清理发送缓冲
+            //无论成功失败，都要清理发送缓冲
             sendArgs.owner.Dispose();
 
             if (args.SocketError == SocketError.Success)
             {
-                ///冗余调用，可以省去
+                //冗余调用，可以省去
                 //args.BufferList = null;
 
                 SendStart();
@@ -296,7 +341,7 @@ namespace Megumin.Remote
                 args = null;
                 if (!manualDisconnecting)
                 {
-                    ///遇到错误
+                    //遇到错误
                     OnSocketException(socketError);
                 }
             }
@@ -359,7 +404,7 @@ namespace Megumin.Remote
             {
                 if (args.SocketError == SocketError.Success)
                 {
-                    ///本次接收的长度
+                    //本次接收的长度
                     int length = args.BytesTransferred;
 
                     if (length == 0)
@@ -376,10 +421,10 @@ namespace Megumin.Remote
                     int totalValidLength = length + args.Offset;
 
                     var list = ByteMessageList.Rent();
-                    ///由打包器处理分包
+                    //由打包器处理分包
                     var residual = MessagePipeline.CutOff(args.Buffer.AsSpan(0,totalValidLength), list);
 
-                    ///租用新内存
+                    //租用新内存
                     var bfo = BufferPool.Rent(MaxBufferLength);
 
                     if (MemoryMarshal.TryGetArray<byte>(bfo.Memory, out var newBuffer))
@@ -393,20 +438,20 @@ namespace Megumin.Remote
 
                     if (residual.Length > 0)
                     {
-                        ///半包复制
+                        //半包复制
                         residual.CopyTo(bfo.Memory.Span);
                     }
 
                     args.SetBuffer(newBuffer.Array, residual.Length, newBuffer.Count - residual.Length);
 
 
-                    ///这里先处理消息在继续接收，处理消息是异步的，耗时并不长，下N次继续接收消息都可能是同步完成，
-                    ///先接收可能导致比较大的消息时序错位。
+                    //这里先处理消息在继续接收，处理消息是异步的，耗时并不长，下N次继续接收消息都可能是同步完成，
+                    //先接收可能导致比较大的消息时序错位。
 
-                    ///处理消息
+                    //处理消息
                     DealMessageAsync(list);
 
-                    ///继续接收
+                    //继续接收
                     InnerReveiveStart();
                 }
                 else
@@ -424,8 +469,8 @@ namespace Megumin.Remote
             }
             finally
             {
-                ///重构后的BufferPool改为申请时清零数据，所以出不清零，节省性能。
-                ///owner.Memory.Span.Clear();
+                //重构后的BufferPool改为申请时清零数据，所以出不清零，节省性能。
+                //owner.Memory.Span.Clear();
                 owner.Dispose();
             }
         }
@@ -445,13 +490,16 @@ namespace Megumin.Remote
                     ReceiveByteMessage(item);
                 }
 
-                ///回收池对象
+                //回收池对象
                 list.Clear();
                 ByteMessageList.Return(list);
             });
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     internal class MemoryArgs : SocketAsyncEventArgs
     {
         public IMemoryOwner<byte> owner { get; private set; }

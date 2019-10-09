@@ -212,11 +212,11 @@ namespace UnitFunc
         {
             TestPacket2 packet2 = new TestPacket2() { Value = new Random().Next() };
             TaskCompletionSource<Exception> source = new TaskCompletionSource<Exception>();
-            remote.SendAsyncSafeAwait<TestPacket1>(packet2, ex =>
+           var data =   remote.SendAsyncSafeAwait<TestPacket1>(packet2, ex =>
              {
                  source.SetResult(ex);
              });
-
+            
             var (result, complete) = await source.Task.WaitAsync(3000);
             Assert.AreEqual(true, complete);
             Assert.AreEqual(typeof(InvalidCastException), result.GetType());
@@ -226,7 +226,7 @@ namespace UnitFunc
         {
             TestPacket1 packet2 = new TestPacket1() { Value = new Random().Next() };
             TaskCompletionSource<Exception> source = new TaskCompletionSource<Exception>();
-            remote.SendAsyncSafeAwait<TestPacket2>(packet2,ex=>
+           var data =  remote.SendAsyncSafeAwait<TestPacket2>(packet2,ex=>
             {
                 source.SetResult(ex);
             });

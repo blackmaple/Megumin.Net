@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Megumin.Message</RootNamespace>
     <AssemblyName>Megumin.MessageStandard</AssemblyName>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Version>0.0.3</Version>
     <Authors>云却</Authors>
     <Product>MeguminNet</Product>

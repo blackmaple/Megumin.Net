@@ -35,7 +35,7 @@ namespace Megumin.Message
             var attribute = type.FirstAttribute<ProtoContractAttribute>();
             if (attribute != null)
             {
-                var MSGID = type.FirstAttribute<MSGID>();
+                var MSGID = type.FirstAttribute<MsgIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist(type, MSGID.ID,
@@ -54,7 +54,7 @@ namespace Megumin.Message
             var attribute = type.FirstAttribute<ProtoContractAttribute>();
             if (attribute != null)
             {
-                var MSGID = type.FirstAttribute<MSGID>();
+                var MSGID = type.FirstAttribute<MsgIdAttribute>();
                 if (MSGID != null)
                 {
                     Regist<T>(MSGID.ID,
@@ -85,7 +85,7 @@ namespace Megumin.Message
 
         public static ushort Serialize<T>(T obj, Span<byte> buffer)
         {
-            ///等待序列化类库支持Span.
+            //等待序列化类库支持Span.
             using (Stream s = new MemoryStream())
             {
                 Serializer.Serialize(s, obj);

@@ -40,7 +40,7 @@ namespace AsyncTest
             SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
             current = TaskScheduler.FromCurrentSynchronizationContext();
             Test2 test2 = new Test2();
-            test2.TestAsync();
+            var data = test2.TestAsync();
 
             Console.WriteLine($"6------当前线程{Thread.CurrentThread.ManagedThreadId}");
             Thread.Sleep(10000);
@@ -50,7 +50,7 @@ namespace AsyncTest
         private static void NewMethod()
         {
             Test test = new Test();
-            test.Test1Async();
+            var data = test.Test1Async();
             Task.Run(() =>
             {
                 Console.WriteLine($"1------当前线程{Thread.CurrentThread.ManagedThreadId}");
@@ -68,12 +68,12 @@ namespace AsyncTest
     {
         internal async Task TestAsync()
         {
-            await Task.Run(()=>
+            await Task.Run(() =>
             {
                 Console.WriteLine($"1------当前线程{Thread.CurrentThread.ManagedThreadId}");
                 Thread.Sleep(1000);
                 Console.WriteLine($"2------当前线程{Thread.CurrentThread.ManagedThreadId}");
-            }).ContinueWith((task)=> 
+            }).ContinueWith((task) =>
             {
                 Console.WriteLine($"3------当前线程{Thread.CurrentThread.ManagedThreadId}");
             }, Program.current);
@@ -243,5 +243,5 @@ namespace AsyncTest
         }
     }
 
-    
+
 }

@@ -14,16 +14,35 @@ namespace Megumin.Remote
     /// </summary>
     public class UdpRemoteListener : UdpClient
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public IPEndPoint ConnectIPEndPoint { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public EndPoint RemappedEndPoint { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="addressFamily"></param>
         public UdpRemoteListener(int port,AddressFamily addressFamily = AddressFamily.InterNetworkV6)
             : base(port, addressFamily)
         {
             this.ConnectIPEndPoint = new IPEndPoint(IPAddress.None,port);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsListening { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public TaskCompletionSource<UdpRemote> TaskCompletionSource { get; private set; }
 
         async void AcceptAsync()
@@ -31,8 +50,8 @@ namespace Megumin.Remote
             while (IsListening)
             {
                 var res = await ReceiveAsync();
-                var (Size, MessageID) = MessagePipeline.Default.ParsePacketHeader(res.Buffer);
-                if (MessageID == MSGID.UdpConnectMessageID)
+                var (_, MessageID) = MessagePipeline.Default.ParsePacketHeader(res.Buffer);
+                if (MessageID == EnumMessgaeId.UdpConnectMessageID)
                 {
                     ReMappingAsync(res);
                 }
@@ -62,10 +81,10 @@ namespace Megumin.Remote
 
                 if (Complete)
                 {
-                    ///完成
+                    //完成
                     if (Result)
                     {
-                        ///连接成功
+                        //连接成功
                         if (TaskCompletionSource == null)
                         {
                             connected.Enqueue(remote);
@@ -77,19 +96,24 @@ namespace Megumin.Remote
                     }
                     else
                     {
-                        ///连接失败但没有超时
+                        //连接失败但没有超时
                         remote.Dispose();
                     }
                 }
                 else
                 {
-                    ///超时，手动断开，释放remote;
+                    //超时，手动断开，释放remote;
                     remote.Disconnect();
                     remote.Dispose();
                 }
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="receiveHandle"></param>
+        /// <returns></returns>
         public async Task<UdpRemote> ListenAsync(ReceiveCallback receiveHandle)
         {
             IsListening = true;
@@ -122,6 +146,7 @@ namespace Megumin.Remote
         /// <summary>
         /// 在ReceiveStart调用之前设置pipline.
         /// </summary>
+        /// <param name="receiveHandle"></param>
         /// <param name="pipline"></param>
         /// <returns></returns>
         public async Task<UdpRemote> ListenAsync(ReceiveCallback receiveHandle,IMessagePipeline pipline)
@@ -154,6 +179,9 @@ namespace Megumin.Remote
             return res;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Stop()
         {
             IsListening = false;

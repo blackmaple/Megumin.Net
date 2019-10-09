@@ -47,6 +47,12 @@ namespace Megumin.Message
     /// <returns></returns>
     public delegate ushort ValueRegistSerialize<T>(in T message, Span<byte> buffer);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="buffer"></param>
+    /// <returns></returns>
     public delegate ushort Serialize(object message, Span<byte> buffer);
 
     /// <summary>
@@ -57,26 +63,32 @@ namespace Megumin.Message
     {
         static MessageLUT()
         {
-            ///注册测试消息和内置消息
-            Regist<TestPacket1>(MSGID.TestPacket1ID, TestPacket1.S, TestPacket1.D);
-            Regist<TestPacket2>(MSGID.TestPacket2ID, TestPacket2.S, TestPacket2.D);
-            ///5个基础类型
-            Regist<string>(MSGID.StringID, BaseType.Serialize, BaseType.StringDeserialize);
-            Regist<int>(MSGID.IntID, BaseType.Serialize,BaseType.IntDeserialize);
-            Regist<long>(MSGID.LongID, BaseType.Serialize,BaseType.LongDeserialize);
-            Regist<float>(MSGID.FloatID, BaseType.Serialize,BaseType.FloatDeserialize);
-            Regist<double>(MSGID.DoubleID, BaseType.Serialize,BaseType.DoubleDeserialize);
+            //注册测试消息和内置消息
+            Regist<TestPacket1>(EnumMessgaeId.TestPacket1ID, TestPacket1.S, TestPacket1.D);
+            Regist<TestPacket2>(EnumMessgaeId.TestPacket2ID, TestPacket2.S, TestPacket2.D);
+            //5个基础类型
+            Regist<string>(EnumMessgaeId.StringID, BaseType.Serialize, BaseType.StringDeserialize);
+            Regist<int>(EnumMessgaeId.IntID, BaseType.Serialize, BaseType.IntDeserialize);
+            Regist<long>(EnumMessgaeId.LongID, BaseType.Serialize, BaseType.LongDeserialize);
+            Regist<float>(EnumMessgaeId.FloatID, BaseType.Serialize, BaseType.FloatDeserialize);
+            Regist<double>(EnumMessgaeId.DoubleID, BaseType.Serialize, BaseType.DoubleDeserialize);
 
 
-            ///框架用类型
-            Regist<HeartBeatsMessage>(MSGID.HeartbeatsMessageID,
+            //框架用类型
+            Regist<HeartBeatsMessage>(EnumMessgaeId.HeartbeatsMessageID,
                 HeartBeatsMessage.Seiralizer, HeartBeatsMessage.Deserilizer, KeyAlreadyHave.ThrowException);
 
 
-            Regist<UdpConnectMessage>(MSGID.UdpConnectMessageID,
+            Regist<UdpConnectMessage>(EnumMessgaeId.UdpConnectMessageID,
                 UdpConnectMessage.Serialize, UdpConnectMessage.Deserialize);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="registSerialize"></param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Serialize Convert<T>(RegistSerialize<T> registSerialize)
         {
@@ -90,6 +102,12 @@ namespace Megumin.Message
             };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="registSerialize"></param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Serialize Convert<T>(ValueRegistSerialize<T> registSerialize)
         {
@@ -103,10 +121,17 @@ namespace Megumin.Message
             };
         }
 
-        static readonly Dictionary<int, (Type type,Deserialize deserialize)> dFormatter = new Dictionary<int, (Type type,Deserialize deserialize)>();
-        static readonly Dictionary<Type, (int MessageID, Serialize serialize)> sFormatter = new Dictionary<Type, (int MessageID, Serialize serialize)>();
-        
-        protected static void AddSFormatter(Type type, int messageID, Serialize seiralize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
+        static readonly Dictionary<EnumMessgaeId, (Type type, Deserialize deserialize)> dFormatter = new Dictionary<EnumMessgaeId, (Type type, Deserialize deserialize)>();
+        static readonly Dictionary<Type, (EnumMessgaeId MessageID, Serialize serialize)> sFormatter = new Dictionary<Type, (EnumMessgaeId MessageID, Serialize serialize)>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="messageID"></param>
+        /// <param name="seiralize"></param>
+        /// <param name="key"></param>
+        protected static void AddSFormatter(Type type, EnumMessgaeId messageID, Serialize seiralize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
         {
             if (type == null || seiralize == null)
             {
@@ -135,7 +160,14 @@ namespace Megumin.Message
             }
         }
 
-        protected static void AddDFormatter(int messageID,Type type, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messageID"></param>
+        /// <param name="type"></param>
+        /// <param name="deserilize"></param>
+        /// <param name="key"></param>
+        protected static void AddDFormatter(EnumMessgaeId messageID, Type type, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
         {
             if (deserilize == null)
             {
@@ -165,45 +197,71 @@ namespace Megumin.Message
             }
         }
 
-        public static void Regist(Type type, int messageID, Serialize seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="messageID"></param>
+        /// <param name="seiralize"></param>
+        /// <param name="deserilize"></param>
+        /// <param name="key"></param>
+        public static void Regist(Type type, EnumMessgaeId messageID, Serialize seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
         {
             AddSFormatter(type, messageID, seiralize, key);
-            AddDFormatter(messageID,type, deserilize, key);
+            AddDFormatter(messageID, type, deserilize, key);
         }
 
-        public static void Regist<T>(int messageID, RegistSerialize<T> seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
-        {
-            AddSFormatter(typeof(T), messageID, Convert(seiralize), key);
-            AddDFormatter(messageID,typeof(T), deserilize, key);
-        }
-
-        public static void Regist<T>(int messageID, ValueRegistSerialize<T> seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="messageID"></param>
+        /// <param name="seiralize"></param>
+        /// <param name="deserilize"></param>
+        /// <param name="key"></param>
+        public static void Regist<T>(EnumMessgaeId messageID, RegistSerialize<T> seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
         {
             AddSFormatter(typeof(T), messageID, Convert(seiralize), key);
             AddDFormatter(messageID, typeof(T), deserilize, key);
         }
 
+
         /// <summary>
+        /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="messageID"></param>
+        /// <param name="seiralize"></param>
+        /// <param name="deserilize"></param>
+        /// <param name="key"></param>
+        public static void Regist<T>(EnumMessgaeId messageID, ValueRegistSerialize<T> seiralize, Deserialize deserilize, KeyAlreadyHave key = KeyAlreadyHave.Skip)
+        {
+            AddSFormatter(typeof(T), messageID, Convert(seiralize), key);
+            AddDFormatter(messageID, typeof(T), deserilize, key);
+        }
+
+
+
+        /// <summary>
+        /// </summary>
         /// <param name="buffer16384"></param>
         /// <param name="message"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"> 消息长度大于8192 - 25(框架用长度),请拆分发送。"</exception>
         /// <remarks>框架中TCP接收最大支持8192，所以发送也不能大于8192，为了安全起见，框架提供的字节数组长度是16384的。</remarks>
-        public static (int messageID, ushort length)
-            Serialize(object message,Span<byte> buffer16384)
+        public static (EnumMessgaeId messageID, ushort length)
+            Serialize(object message, Span<byte> buffer16384)
         {
             var type = message.GetType();
             if (sFormatter.TryGetValue(type, out var sf))
             {
-                ///序列化消息
+                //序列化消息
                 var (MessageID, Seiralize) = sf;
 
                 if (Seiralize == null)
                 {
                     Debug.LogError($"消息[{type.Name}]的序列化函数没有找到。");
-                    return (-1, default);
+                    return (EnumMessgaeId.ErrorType, default);
                 }
 
                 ushort length = Seiralize(message, buffer16384);
@@ -224,7 +282,7 @@ namespace Megumin.Message
             else
             {
                 Debug.LogError($"消息[{type.Name}]的序列化函数没有找到。");
-                return (-1, default);
+                return (EnumMessgaeId.ErrorType, default);
             }
         }
 
@@ -235,7 +293,7 @@ namespace Megumin.Message
         /// <param name="body"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Deserialize(int messageID,in ReadOnlyMemory<byte> body)
+        public static object Deserialize(EnumMessgaeId messageID, in ReadOnlyMemory<byte> body)
         {
             if (dFormatter.ContainsKey(messageID))
             {
@@ -253,9 +311,9 @@ namespace Megumin.Message
         /// </summary>
         /// <param name="messageID"></param>
         /// <returns></returns>
-        public static Type GetType(int messageID)
+        public static Type GetType(EnumMessgaeId messageID)
         {
-            if (dFormatter.TryGetValue(messageID,out var res))
+            if (dFormatter.TryGetValue(messageID, out var res))
             {
                 return res.type;
             }
@@ -265,7 +323,13 @@ namespace Megumin.Message
             }
         }
 
-        public static bool TryGetType(int messageID,out Type type)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messageID"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool TryGetType(EnumMessgaeId messageID, out Type type)
         {
             if (dFormatter.TryGetValue(messageID, out var res))
             {
@@ -284,16 +348,22 @@ namespace Megumin.Message
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static int? GetID<T>()
+        public static EnumMessgaeId? GetID<T>()
         {
-            if (sFormatter.TryGetValue(typeof(T),out var res))
+            if (sFormatter.TryGetValue(typeof(T), out var res))
             {
                 return res.MessageID;
             }
             return null;
         }
 
-        public static bool TryGetID<T>(out int ID)
+       /// <summary>
+       /// 
+       /// </summary>
+       /// <typeparam name="T"></typeparam>
+       /// <param name="ID"></param>
+       /// <returns></returns>
+        public static bool TryGetID<T>(out EnumMessgaeId ID)
         {
             if (sFormatter.TryGetValue(typeof(T), out var res))
             {
@@ -301,7 +371,7 @@ namespace Megumin.Message
                 return true;
             }
 
-            ID = -1;
+            ID = EnumMessgaeId.ErrorType;
             return false;
         }
     }

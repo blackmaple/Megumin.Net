@@ -16,12 +16,23 @@ namespace Megumin.Message
         /// </summary>
         public DateTime Time { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="heartBeats"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         public static ushort Seiralizer(HeartBeatsMessage heartBeats, Span<byte> buffer)
         {
             heartBeats.Time.ToBinary().WriteTo(buffer);
             return sizeof(long);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         public static HeartBeatsMessage Deserilizer(ReadOnlyMemory<byte> buffer)
         {
             long t = buffer.Span.ReadLong();
@@ -29,12 +40,26 @@ namespace Megumin.Message
         }
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class UdpConnectMessage
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public int SYN;
+        /// <summary>
+        /// 
+        /// </summary>
         public int ACT;
+        /// <summary>
+        /// 
+        /// </summary>
         public int seq;
+        /// <summary>
+        /// 
+        /// </summary>
         public int ack;
         internal static UdpConnectMessage Deserialize(ReadOnlyMemory<byte> buffer)
         {
@@ -54,6 +79,13 @@ namespace Megumin.Message
             return 16;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="SYN"></param>
+        /// <param name="ACT"></param>
+        /// <param name="seq"></param>
+        /// <param name="ack"></param>
         public void Deconstruct(out int SYN, out int ACT, out int seq, out int ack)
         {
             SYN = this.SYN;

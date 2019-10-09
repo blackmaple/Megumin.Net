@@ -11,16 +11,31 @@ using Net.Remote;
 
 namespace Megumin.Remote
 {
-    public abstract partial class RemoteBase:IUID<int>
+    public abstract partial class RemoteBase : IUID<int>
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public int ID { get; } = InterlockedID<IRemote>.NewID();
         /// <summary>
         /// 这是留给用户赋值的
         /// </summary>
         public virtual int UID { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsVaild { get; protected set; } = true;
+        /// <summary>
+        /// 
+        /// </summary>
         public IPEndPoint ConnectIPEndPoint { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTime LastReceiveTime { get; protected set; } = DateTime.Now;
+        /// <summary>
+        /// 
+        /// </summary>
         public IRpcCallbackPool RpcCallbackPool { get; } = new RpcCallbackPool(32);
         /// <summary>
         /// 当前是否为手动关闭中
@@ -34,7 +49,7 @@ namespace Megumin.Remote
     }
 
     /// 发送
-    partial class RemoteBase : ISendMessage,IAsyncSendMessage
+    partial class RemoteBase : ISendMessage, IAsyncSendMessage
     {
         /// <summary>
         /// 异步发送
@@ -48,19 +63,24 @@ namespace Megumin.Remote
         /// <summary>
         /// 正常发送入口
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="rpcID"></param>
         /// <param name="message"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal protected virtual void SendAsync(int rpcID, object message)
-            =>SendAsync(MessagePipeline.Pack(rpcID, message));
-        
+            => SendAsync(MessagePipeline.Pack(rpcID, message));
+
         /// <summary>
         /// 注意，发送完成时内部回收了buffer。
         /// ((框架约定1)发送字节数组发送完成后由发送逻辑回收)
         /// </summary>
         public abstract void SendAsync(IMemoryOwner<byte> memoryOwner);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public IMiniAwaitable<(RpcResult result, Exception exception)> SendAsync<RpcResult>(object message)
         {
             ReceiveStart();
@@ -74,11 +94,18 @@ namespace Megumin.Remote
             }
             catch (Exception e)
             {
-                RpcCallbackPool.TrySetException(rpcID * -1 ,e);
+                RpcCallbackPool.TrySetException(rpcID * -1, e);
                 return source;
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="OnException"></param>
+        /// <returns></returns>
         public IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message, Action<Exception> OnException = null)
         {
             ReceiveStart();
@@ -99,9 +126,14 @@ namespace Megumin.Remote
         }
     }
 
-    /// 接收
+    /// <summary>
+    /// 接受
+    /// </summary>
     partial class RemoteBase
     {
+        /// <summary>
+        /// 
+        /// </summary>
         protected const int MaxBufferLength = 8192;
 
         /// <summary>
@@ -109,37 +141,52 @@ namespace Megumin.Remote
         /// </summary>
         public abstract void ReceiveStart();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="byteMessage"></param>
         protected virtual void ReceiveByteMessage(IMemoryOwner<byte> byteMessage)
         {
             MessagePipeline.Unpack(byteMessage, this);
         }
     }
 
-    partial class RemoteBase : IObjectMessageReceiver,IReceiveMessage
+    /// <summary>
+    /// 
+    /// </summary>
+    partial class RemoteBase : IObjectMessageReceiver, IReceiveMessage
     {
-        public ValueTask<object> Deal(int rpcID, object message)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messgaeId"></param>
+        /// <param name="rpcID"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public ValueTask<object> Deal(EnumMessgaeId messgaeId, int rpcID, object message)
         {
             if (rpcID < 0)
             {
-                ///这个消息是rpc返回（回复的RpcID为负数）
+                //这个消息是rpc返回（回复的RpcID为负数）
                 RpcCallbackPool?.TrySetResult(rpcID, message);
                 return new ValueTask<object>(result: null);
             }
             else
             {
-                ///这个消息是非Rpc应答
-                ///普通响应onRely
-                return DealMessage(message);
+                //这个消息是非Rpc应答
+                //普通响应onRely
+                return DealMessage(messgaeId, message);
             }
         }
 
         /// <summary>
         /// 通常用户接收反序列化完毕的消息的函数
         /// </summary>
+        /// <param name="messgaeId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual ValueTask<object> DealMessage(object message)
+        protected virtual ValueTask<object> DealMessage(EnumMessgaeId messgaeId, object message)
         {
             if (onReceive == null)
             {
@@ -147,10 +194,13 @@ namespace Megumin.Remote
             }
             else
             {
-                return onReceive.Invoke(message,this);
+                return onReceive.Invoke(messgaeId,message, this);
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected ReceiveCallback onReceive;
 
         /// <summary>
@@ -170,17 +220,36 @@ namespace Megumin.Remote
     }
 
     ///路由
-    partial class RemoteBase :IForwarder
+    partial class RemoteBase : IForwarder
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="identifier"></param>
         public void SendAsync(object message, int identifier)
         {
-            SendAsync(0,message,identifier);
+            SendAsync(0, message, identifier);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="rpcID"></param>
+        /// <param name="message"></param>
+        /// <param name="identifier"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal protected virtual void SendAsync<T>(int rpcID, T message, int identifier)
-            => SendAsync(MessagePipeline.Pack(0,message,identifier));
+            => SendAsync(MessagePipeline.Pack(0, message, identifier));
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
         public IMiniAwaitable<(RpcResult result, Exception exception)> SendAsync<RpcResult>(object message, int identifier)
         {
             ReceiveStart();
@@ -189,7 +258,7 @@ namespace Megumin.Remote
 
             try
             {
-                SendAsync(rpcID, message,identifier);
+                SendAsync(rpcID, message, identifier);
                 return source;
             }
             catch (Exception e)
@@ -199,6 +268,14 @@ namespace Megumin.Remote
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="identifier"></param>
+        /// <param name="OnException"></param>
+        /// <returns></returns>
         public IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message, int identifier, Action<Exception> OnException = null)
         {
             ReceiveStart();
@@ -218,6 +295,7 @@ namespace Megumin.Remote
             }
         }
     }
+
 
     internal static class Debug
     {

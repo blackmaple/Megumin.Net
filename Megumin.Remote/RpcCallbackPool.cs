@@ -45,7 +45,6 @@ namespace Megumin.Remote
         /// <summary>
         /// 原子操作 取得RpcId,发送方的的RpcID为正数，回复的RpcID为负数，正负一一对应
         /// <para>0,int.MinValue 为无效值</para> 
-        /// <seealso cref="RemoteBase.Deal(int, object)"/>
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,7 +52,7 @@ namespace Megumin.Remote
         {
             lock (lock_BuildRpcId)
             {
-               return (this.rpcCursor == int.MaxValue) ? (this.rpcCursor = 1) : (++this.rpcCursor);
+                return (this.rpcCursor == int.MaxValue) ? (this.rpcCursor = 1) : (++this.rpcCursor);
             }
         }
 
@@ -68,7 +67,7 @@ namespace Megumin.Remote
             var key = rpcID * -1;
 
             IMiniAwaitable<(RpcResult result, Exception exception)> source = MiniTask<(RpcResult result, Exception exception)>.Rent();
-            this.AddOrUpdate(rpcID, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
+            this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
                 oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
                 return (DateTime.Now, DefRpcCallBack);
@@ -88,7 +87,7 @@ namespace Megumin.Remote
                     }
                     else
                     {
-                        ///转换类型错误
+                        //转换类型错误
                         source.SetResult((default,
                             new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
                             $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}")));
@@ -100,6 +99,7 @@ namespace Megumin.Remote
                 }
 
             }
+            this.CreateCheckTimeout(key);
 
             return (rpcID, source);
         }
@@ -119,12 +119,11 @@ namespace Megumin.Remote
 
             //  CheckKeyConflict(key);
 
-            this.AddOrUpdate(rpcID, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
+            this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
                 oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
                 return (DateTime.Now, DefRpcCallBack);
             });
-
 
             void DefRpcCallBack(object resp, Exception ex)
             {
@@ -143,7 +142,7 @@ namespace Megumin.Remote
                         }
                         else
                         {
-                            ///转换类型错误
+                            //转换类型错误
                             OnException?.Invoke(new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +
                                 $"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}"));
                         }
@@ -156,6 +155,8 @@ namespace Megumin.Remote
                 }
             }
 
+            this.CreateCheckTimeout(key);
+
             return (rpcID, source);
         }
 
@@ -166,12 +167,13 @@ namespace Megumin.Remote
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void CreateCheckTimeout(int rpcID)
         {
-            ///备注：即使异步发送被同步调用，此处也不会发生错误。
-            ///同步调用，当返回消息返回时，会从回调池移除，
-            ///那么计时器结束时将不会找到Task。如果调用出没有保持Task引用，
-            ///那么Task会成为孤岛，被GC回收。
-            
-            ///超时检查
+            //备注：即使异步发送被同步调用，此处也不会发生错误。
+            //同步调用，当返回消息返回时，会从回调池移除，
+            //那么计时器结束时将不会找到Task。如果调用出没有保持Task引用，
+            //那么Task会成为孤岛，被GC回收。
+
+ 
+
             Task.Run(async () =>
             {
                 if (RpcTimeOutMilliseconds >= 0)
@@ -232,17 +234,11 @@ namespace Megumin.Remote
             }
             return false;
         }
-
-
-
-
-
+ 
     }
 
 
-    internal class TimeOutService
-    {
 
 
-    }
+
 }

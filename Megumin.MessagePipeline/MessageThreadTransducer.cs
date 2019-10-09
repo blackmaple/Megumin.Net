@@ -27,21 +27,20 @@ namespace Megumin.Message
                 res?.Invoke();
             }
 
-            ///                                       双检查（这里使用Count和IsEmpty有不同含义）
+            //双检查（这里使用Count和IsEmpty有不同含义）
             while (actions.TryDequeue(out var callback) || !actions.IsEmpty)
             {
                 callback?.Invoke();
             }
         }
 
-        internal static IMiniAwaitable<object> Push(int rpcID, object message, IObjectMessageReceiver r)
+        internal static IMiniAwaitable<object> Push(EnumMessgaeId messgaeId,int rpcID, object message, IObjectMessageReceiver r)
         {
             MiniTask<object> task1 = MiniTask<object>.Rent();
-            Action action = async () =>
+            async void action()
             {
-                ///此处可以忽略异常处理
-                ///
-                var response = await r.Deal(rpcID, message);
+                //此处可以忽略异常处理
+                var response = await r.Deal(messgaeId, rpcID, message);
 
                 if (response is Task<object> task)
                 {
@@ -54,7 +53,7 @@ namespace Megumin.Message
                 }
 
                 task1.SetResult(response);
-            };
+            }
 
             receivePool.Enqueue(action);
 
