@@ -148,7 +148,7 @@ namespace Megumin.Message
         /// <param name="messageID"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        protected virtual bool CheckPost2ThreadScheduler(EnumMessgaeId messageID, object message)
+        protected virtual bool CheckPost2ThreadScheduler(int messageID, object message)
         {
             return Post2ThreadScheduler;
         }
@@ -184,7 +184,7 @@ namespace Megumin.Message
         /// <param name="extraMessage"></param>
         /// <param name="messageBody"></param>
         /// <param name="forwarder"></param>
-        public virtual void Forward<T>(T bufferReceiver, EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody, IForwarder forwarder)
+        public virtual void Forward<T>(T bufferReceiver, int messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody, IForwarder forwarder)
             where T : IRemoteID, IUID<int>
         {
             RoutingInformationModifier modifier = extraMessage;
@@ -228,7 +228,7 @@ namespace Megumin.Message
         /// <param name="messageBody"></param>
         /// <param name="bufferReceiver"></param>
         /// <returns></returns>
-        public virtual ValueTask<bool> PreDeserialize<T>(EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage,
+        public virtual ValueTask<bool> PreDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage,
             ReadOnlyMemory<byte> messageBody, T bufferReceiver)
             where T : ISendMessage, IRemoteID, IUID<int>, IObjectMessageReceiver
         {
@@ -245,7 +245,7 @@ namespace Megumin.Message
         /// <param name="message"></param>
         /// <param name="bufferReceiver"></param>
         /// <returns></returns>
-        public virtual ValueTask<bool> PostDeserialize<T>(EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage,
+        public virtual ValueTask<bool> PostDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage,
             int rpcID, object message, T bufferReceiver)
             where T : ISendMessage, IRemoteID, IUID<int>, IObjectMessageReceiver
         {
@@ -329,7 +329,7 @@ namespace Megumin.Message
         /// <param name="extraMessage"></param>
         /// <param name="messageBody"></param>
         /// <returns>框架使用BigEndian</returns>
-        public virtual IMemoryOwner<byte> Pack(EnumMessgaeId messageID, ReadOnlySpan<byte> extraMessage, ReadOnlySpan<byte> messageBody)
+        public virtual IMemoryOwner<byte> Pack(int messageID, ReadOnlySpan<byte> extraMessage, ReadOnlySpan<byte> messageBody)
         {
             if (extraMessage.IsEmpty)
             {
@@ -360,7 +360,7 @@ namespace Megumin.Message
         /// <param name="buffer"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException">数据长度小于报头长度</exception>
-        public virtual (ushort totalLenght, EnumMessgaeId messageID)
+        public virtual (ushort totalLenght, int messageID)
             ParsePacketHeader(ReadOnlySpan<byte> buffer)
         {
             if (buffer.Length >= HeaderOffset)
@@ -369,7 +369,7 @@ namespace Megumin.Message
 
                 int messageID = buffer.Slice(2).ReadInt();
 
-                return (size, (EnumMessgaeId)messageID);
+                return (size, (int)messageID);
             }
             else
             {
@@ -383,7 +383,7 @@ namespace Megumin.Message
         /// <param name="buffer"></param>
         /// <returns></returns>
         /// <remarks>分离消息是使用报头描述的长度而不能依赖于Span长度</remarks>
-        public virtual (EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody)
+        public virtual (int messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody)
             UnPack(ReadOnlyMemory<byte> buffer)
         {
             ReadOnlySpan<byte> span = buffer.Span;
@@ -409,7 +409,7 @@ namespace Megumin.Message
         /// <param name="message"></param>
         /// <param name="rpcID"></param>
         /// <returns></returns>
-        public virtual (EnumMessgaeId messageID, ushort length)
+        public virtual (int messageID, ushort length)
             Serialize(object message, int rpcID, Span<byte> span)
         {
             //rpcID直接附加值消息正文前4位。
@@ -422,7 +422,7 @@ namespace Megumin.Message
         /// 反序列化消息阶段
         /// </summary>
         /// <returns></returns>
-        public virtual (int rpcID, object message) Deserialize(EnumMessgaeId messageID, in ReadOnlyMemory<byte> messageBody)
+        public virtual (int rpcID, object message) Deserialize(int messageID, in ReadOnlyMemory<byte> messageBody)
         {
             var rpcID = messageBody.Span.ReadInt();
             var message = MessageLUT.Deserialize(messageID, messageBody.Slice(4));
@@ -433,7 +433,7 @@ namespace Megumin.Message
     internal class GateServerMessagePipeline : MessagePipeline
     {
         ///这是如何使用转发的例子
-        public override ValueTask<bool> PreDeserialize<T>(EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody, T bufferReceiver)
+        public override ValueTask<bool> PreDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage, ReadOnlyMemory<byte> messageBody, T bufferReceiver)
         {
             RoutingInformationModifier information = extraMessage;
             if (information.Mode == EnumRouteMode.Backward || information.Mode == EnumRouteMode.Forward)
@@ -458,7 +458,7 @@ namespace Megumin.Message
             throw new NotImplementedException();
         }
 
-        public override async ValueTask<bool> PostDeserialize<T>(EnumMessgaeId messageID, ReadOnlyMemory<byte> extraMessage, int rpcID, object message, T bufferReceiver)
+        public override async ValueTask<bool> PostDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage, int rpcID, object message, T bufferReceiver)
         {
             RoutingInformationModifier information = extraMessage;
             //当转发到路由表末尾时，寻找消息接收者，可能时Remote本身，也可能能是其他任意符合接口的对象。
@@ -523,7 +523,7 @@ namespace Megumin.Message
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public static async ValueTask<object> DealMessage(EnumMessgaeId messgaeId, object message, IReceiveMessage receiver)
+        public static async ValueTask<object> DealMessage(int messgaeId, object message, IReceiveMessage receiver)
         {
             totalCount++;
             switch (message)

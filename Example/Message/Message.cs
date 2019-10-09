@@ -9,7 +9,7 @@ namespace Message
     /// <summary>
     /// 
     /// </summary>
-    [MsgIdAttribute(1000)]
+    [MessageId(1000)]
     [ProtoContract]
     [MessagePackObject]
     public class Message
@@ -19,7 +19,7 @@ namespace Message
     /// <summary>
     /// 
     /// </summary>
-    [MsgIdAttribute(1001)]
+    [MessageId(1001)]
     [ProtoContract]
     [MessagePackObject]
     public class Login
@@ -35,7 +35,7 @@ namespace Message
     /// <summary>
     /// 
     /// </summary>
-    [MsgIdAttribute(1002)]
+    [MessageId(1002)]
     [ProtoContract]
     [MessagePackObject]
     public class LoginResult
@@ -51,7 +51,7 @@ namespace Message
     /// <summary>
     /// 
     /// </summary>
-    [MsgIdAttribute(1003)]
+    [MessageId(1003)]
     [ProtoContract]
     [MessagePackObject]
     public class Login2Gate
@@ -74,7 +74,7 @@ namespace Message
     /// <summary>
     /// 
     /// </summary>
-    [MsgIdAttribute(1004)]
+    [MessageId(1004)]
     [ProtoContract]
     [MessagePackObject]
     public class Login2GateResult

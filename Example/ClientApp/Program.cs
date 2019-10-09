@@ -77,7 +77,7 @@ namespace TestClient
             }
         }
 
-        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(EnumMessgaeId messgaeId, object message, IReceiveMessage receiver)
+        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(int messgaeId, object message, IReceiveMessage receiver)
         {
             return default;
         }

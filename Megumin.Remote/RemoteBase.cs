@@ -163,7 +163,7 @@ namespace Megumin.Remote
         /// <param name="rpcID"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public ValueTask<object> Deal(EnumMessgaeId messgaeId, int rpcID, object message)
+        public ValueTask<object> Deal(int messgaeId, int rpcID, object message)
         {
             if (rpcID < 0)
             {
@@ -186,7 +186,7 @@ namespace Megumin.Remote
         /// <param name="message"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual ValueTask<object> DealMessage(EnumMessgaeId messgaeId, object message)
+        protected virtual ValueTask<object> DealMessage(int messgaeId, object message)
         {
             if (onReceive == null)
             {

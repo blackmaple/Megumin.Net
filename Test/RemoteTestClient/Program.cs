@@ -122,7 +122,7 @@ namespace RemoteTestClient
             public int Index { get; set; }
             Stopwatch stopwatch = new Stopwatch();
 
-            public async ValueTask<object> TestReceive(EnumMessgaeId messgaeId, object message,IReceiveMessage receiver)
+            public async ValueTask<object> TestReceive(int messgaeId, object message,IReceiveMessage receiver)
             {
                 switch (message)
                 {
