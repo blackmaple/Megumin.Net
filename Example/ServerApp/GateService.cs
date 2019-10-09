@@ -38,9 +38,10 @@ namespace ServerApp
             switch (message)
             {
                 case string str:
-                    return $"{str} world";
+                    Console.WriteLine (str);
+                    break;
                 case Login2Gate login:
-
+                    throw new Exception("登录失败");
                     Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
 
                     Login2GateResult resp = new Login2GateResult();
@@ -56,5 +57,8 @@ namespace ServerApp
         {
             
         }
+
+
+          
     }
 }

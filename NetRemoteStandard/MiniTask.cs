@@ -14,7 +14,7 @@ namespace System.Threading.Tasks
     /// <typeparam name="T"></typeparam>
     public class MiniTask<T> : IMiniAwaitable<T>
     {
-        enum State
+        enum EnumState
         {
             InPool,
             Waiting,
@@ -28,7 +28,7 @@ namespace System.Threading.Tasks
         public static int MaxCount { get; set; } = 512;
 
         static ConcurrentQueue<MiniTask<T>> pool = new ConcurrentQueue<MiniTask<T>>();
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -39,12 +39,14 @@ namespace System.Threading.Tasks
             {
                 if (task != null)
                 {
-                    task.state = State.Waiting;
+                    task.State = EnumState.Waiting;
+
+
                     return task;
                 }
             }
 
-            return new MiniTask<T>() { state = State.Waiting };
+            return new MiniTask<T>() { State = EnumState.Waiting };
         }
 
         /// <summary>
@@ -62,7 +64,7 @@ namespace System.Threading.Tasks
             }
         }
 
-        volatile State state = State.InPool;
+        volatile EnumState State = EnumState.InPool;
 
         private Action continuation;
         /// <summary>
@@ -73,7 +75,7 @@ namespace System.Threading.Tasks
         /// <summary>
         /// 
         /// </summary>
-        public bool IsCompleted => state == State.Success || state == State.Faild;
+        public bool IsCompleted => State == EnumState.Success || State == EnumState.Faild;
         /// <summary>
         /// 请不要同步访问Result。即使同步完成也应该使用await 关键字。同步访问可能无法取得正确的值，或抛出异常。
         /// </summary>
@@ -88,7 +90,7 @@ namespace System.Threading.Tasks
         {
             lock (innerlock)
             {
-                if (state == State.InPool)
+                if (State == EnumState.InPool)
                 {
                     //这里被触发一定是是类库BUG。
                     throw new ArgumentException($"{nameof(MiniTask<T>)} task conflict, underlying error, please contact the framework author." +
@@ -98,7 +100,7 @@ namespace System.Threading.Tasks
                 alreadyEnterAsync = true;
                 this.continuation -= continuation;
                 this.continuation += continuation;
-                TryComplete(); 
+                TryComplete();
             }
         }
 
@@ -110,7 +112,7 @@ namespace System.Threading.Tasks
         {
             lock (innerlock)
             {
-                if (state == State.InPool)
+                if (State == EnumState.InPool)
                 {
                     //这里被触发一定是是类库BUG。
                     throw new ArgumentException($"{nameof(MiniTask<T>)} task conflict, underlying error, please contact the framework author." +
@@ -132,12 +134,12 @@ namespace System.Threading.Tasks
         {
             lock (innerlock)
             {
-                if (state == State.InPool)
+                if (State == EnumState.InPool)
                 {
                     throw new InvalidOperationException($"Task does not exist/任务不存在");
                 }
                 this.Result = result;
-                state = State.Success;
+                State = EnumState.Success;
                 TryComplete();
             }
         }
@@ -146,12 +148,12 @@ namespace System.Threading.Tasks
         {
             if (alreadyEnterAsync)
             {
-                if (state == State.Waiting)
+                if (State == EnumState.Waiting)
                 {
                     return;
                 }
 
-                if (state == State.Success)
+                if (State == EnumState.Success)
                 {
                     continuation?.Invoke();
                 }
@@ -168,13 +170,13 @@ namespace System.Threading.Tasks
         {
             lock (innerlock)
             {
-                if (state == State.InPool)
+                if (State == EnumState.InPool)
                 {
                     throw new InvalidOperationException($"Task does not exist/任务不存在");
                 }
 
                 Result = default;
-                state = State.Faild;
+                State = EnumState.Faild;
                 TryComplete();
             }
         }
@@ -187,13 +189,13 @@ namespace System.Threading.Tasks
         {
             Reset();
 
-            if (state != State.InPool)
+            if (State != EnumState.InPool)
             {
                 //state = State.InPool;必须在pool.Enqueue(this);之前。
                 //因为当pool为空的时候，放入池的元素会被立刻取出。并将状态设置为Waiting。
                 //如果state = State.InPool;在pool.Enqueue(this)后，那么会导致Waiting 状态被错误的设置为InPool;
                 // **** 我在这里花费了4个小时（sad）。
-                state = State.InPool;
+                State = EnumState.InPool;
 
 #if DEBUG
                 lastThreadID = System.Threading.Thread.CurrentThread.ManagedThreadId;

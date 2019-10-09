@@ -217,6 +217,8 @@ namespace Megumin.Remote
                 onReceive -= value;
             }
         }
+
+  
     }
 
     ///路由

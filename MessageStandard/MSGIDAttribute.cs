@@ -8,7 +8,7 @@ namespace Megumin.Message
     /// 使用MessageID来为每一个消息指定一个唯一ID(-999~999 被框架占用)。
     /// 请查看常量。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Method)]
     public sealed class MsgIdAttribute : Attribute
     {
         /// <summary>
@@ -60,7 +60,7 @@ namespace Megumin.Message
     /// <summary>
     /// 使用MessageID来为每一个消息指定一个唯一ID(-999~999 被框架占用)。
     /// </summary>
-    public enum EnumMessgaeId
+    public enum EnumMessgaeId:int
     {
         /// <summary>
         /// 

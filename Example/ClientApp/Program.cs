@@ -30,17 +30,25 @@ namespace TestClient
             });
 
             ConnectAsync();
+            while (true)
+            {
+                var line = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(line)) break;
+                remote.SendAsync(line);
+            }
             Console.ReadLine();
         }
 
+
+        static IRemote remote = new TcpRemote();
         /// <summary>
         /// 连接服务器
         /// </summary>
         private static async void ConnectAsync()
         {
-            IRemote remote = new TcpRemote();
+           
             var ex = await remote.ConnectAsync(new IPEndPoint(IPAddress.IPv6Loopback,54321));
-
+            remote.OnReceiveCallback += Remote_OnReceiveCallback;
             if (ex == null)
             {
                 //没有异常，连接成功
@@ -69,7 +77,9 @@ namespace TestClient
             }
         }
 
-
-
+        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(EnumMessgaeId messgaeId, object message, IReceiveMessage receiver)
+        {
+            return default;
+        }
     }
 }
