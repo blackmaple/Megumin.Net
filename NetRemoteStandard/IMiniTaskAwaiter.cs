@@ -56,7 +56,7 @@ namespace System.Threading.Tasks
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public struct MiniTaskAwaiter<T> : ICriticalNotifyCompletion
+    public struct IMiniTaskAwaiter<T> : ICriticalNotifyCompletion
     {
         private IMiniAwaitable<T> CanAwaiter;
 
@@ -78,7 +78,7 @@ namespace System.Threading.Tasks
         /// 
         /// </summary>
         /// <param name="canAwait"></param>
-        public MiniTaskAwaiter(IMiniAwaitable<T> canAwait)
+        public IMiniTaskAwaiter(IMiniAwaitable<T> canAwait)
         {
             this.CanAwaiter = canAwait;
         }
@@ -115,8 +115,8 @@ public static class ICanAwaitableEx_D248AE7ECAD0420DAF1BCEA2801012FF
     /// <typeparam name="T"></typeparam>
     /// <param name="canAwaitable"></param>
     /// <returns></returns>
-    public static MiniTaskAwaiter<T> GetAwaiter<T>(this IMiniAwaitable<T> canAwaitable)
+    public static IMiniTaskAwaiter<T> GetAwaiter<T>(this IMiniAwaitable<T> canAwaitable)
     {
-        return new MiniTaskAwaiter<T>(canAwaitable);
+        return new IMiniTaskAwaiter<T>(canAwaitable);
     }
 }

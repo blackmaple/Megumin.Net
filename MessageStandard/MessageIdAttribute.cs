@@ -17,7 +17,7 @@ namespace Megumin.Message
         /// 
         /// </summary>
         /// <param name="messgaeId"></param>
-        public MessageIdAttribute(int messgaeId)
+        public MessageIdAttribute(int messgaeId):base(messgaeId)
         {
             this.ID = messgaeId;
         }

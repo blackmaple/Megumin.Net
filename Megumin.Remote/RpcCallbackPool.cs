@@ -183,7 +183,7 @@ namespace Megumin.Remote
                     {
                         MessageThreadTransducer.Invoke(() =>
                         {
-                            rpc.rpcCallback?.Invoke(null, new TimeoutException($"The RPC {rpcID} callback timed out and did not get a remote response./RPC {rpcID} 回调超时，没有得到远端响应。"));
+                            rpc.rpcCallback?.Invoke(default, new TimeoutException($"The RPC {rpcID} callback timed out and did not get a remote response./RPC {rpcID} 回调超时，没有得到远端响应。"));
                         });
                     }
                 }

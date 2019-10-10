@@ -32,12 +32,12 @@ namespace Maple.CustomCore
             catch (Exception ex)
             {
                 System.Console.WriteLine(ex.Message);
-                return this.OnException(ex);
+                return this.OnException(messageId,ex);
             }
             return default;
         }
 
-        protected virtual ValueTask<object> OnException(Exception ex)
+        protected virtual ValueTask<object> OnException(int messageId,Exception ex)
         {
             return default;
         }
