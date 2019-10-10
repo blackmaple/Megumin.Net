@@ -8,7 +8,7 @@ namespace Maple.CustomExplosions
     [AttributeUsage(AttributeTargets.Method)]
     public class CallbackIdAttribute  :Attribute 
     {
-        public CallbackIdAttribute(int messageId) : base(messageId)
+        public CallbackIdAttribute(int messageId) : base()
         { 
         
         }
