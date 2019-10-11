@@ -15,8 +15,8 @@ namespace TestClient
         static void Main(string[] args)
         {
             //将协议类的程序集注册进查找表中
-            //MessagePackLUT.Regist(typeof(Login).Assembly);
-            Protobuf_netLUT.Regist(typeof(Login).Assembly);
+          MessagePackLUT.Regist(typeof(Login).Assembly);
+            //    Protobuf_netLUT.Regist(typeof(Login).Assembly);
 
             //建立主线程 或指定的任何线程 轮询。（确保在unity中使用主线程轮询）
             //ThreadScheduler保证网络底层的各种回调函数切换到主线程执行以保证执行顺序。

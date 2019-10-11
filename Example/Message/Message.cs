@@ -81,7 +81,7 @@ namespace Message
     public class Login2GateResult: DefRpcCallbackResult
     {
 
-
+        [Key(3)]
         [ProtoMember(1)]
         public string M { set; get; }
 
@@ -91,14 +91,17 @@ namespace Message
     /// 所有的RPC调用应该继承这个
     /// </summary>
     
-    [MessageId(9999)]
+   // [MessageId(9999)]
     [ProtoContract]
     [ProtoInclude(3,typeof(Login2GateResult))]
+    [MessagePackObject]
     public class DefRpcCallbackResult : IRpcCallbackResult
     {
         [ProtoMember(1)]
+        [Key(0)]
         public EnumRpcCallbackResultStatus Code { set; get; }
         [ProtoMember(2)]
+        [Key(1)]
         public string Messge { set; get; }
 
     }

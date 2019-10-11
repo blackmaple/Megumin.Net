@@ -4,7 +4,7 @@ using System;
 namespace Maple.CustomExplosions
 {
     /// <summary>
-    /// 所有的RPC调用应该继承这个
+    /// RPC的基类应该继承这个接口
     /// </summary>
     public interface IRpcCallbackResult
     {
@@ -13,6 +13,8 @@ namespace Maple.CustomExplosions
 
     }
 
+    
+ 
 
 
     public enum EnumRpcCallbackResultStatus

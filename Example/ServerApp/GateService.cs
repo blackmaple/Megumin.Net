@@ -44,7 +44,7 @@ namespace ServerApp
                 case Login2Gate login:
                     Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
 
-                    DefRpcCallbackResult resp = new DefRpcCallbackResult();
+                    Login2GateResult resp = new Login2GateResult();
                     resp.Code = Maple.CustomExplosions.EnumRpcCallbackResultStatus.Success;
                     return resp;
                 default:

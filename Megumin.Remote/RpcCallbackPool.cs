@@ -184,18 +184,10 @@ namespace Megumin.Remote
             void DefRpcCallBack(object resp, Exception ex)
             {
 
-                if (ex == null  )
+                if (ex == null && resp is RpcResult result)
                 {
-                    if (resp is RpcResult result)
-                    {
-                        source.SetResult(result);
-                    }
-                    else if (resp is IRpcCallbackResult result1)
-                    {
-                        source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ServiceError });
-                    }
+                    source.SetResult(result);
                 }
-           
                 else
                 {
                     //再此处的异常 都来自客户端
