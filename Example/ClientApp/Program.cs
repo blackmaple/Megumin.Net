@@ -6,6 +6,7 @@ using Megumin;
 using Megumin.Message;
 using Megumin.Remote;
 using Net.Remote;
+using Maple.CustomExplosions;
 
 namespace TestClient
 {
@@ -46,8 +47,8 @@ namespace TestClient
         /// </summary>
         private static async void ConnectAsync()
         {
-           
-            var ex = await remote.ConnectAsync(new IPEndPoint(IPAddress.IPv6Loopback,54321));
+
+            var ex = await remote.ConnectAsync(new IPEndPoint(IPAddress.IPv6Loopback, 54321));
             remote.OnReceiveCallback += Remote_OnReceiveCallback;
             if (ex == null)
             {
@@ -55,7 +56,7 @@ namespace TestClient
                 Console.WriteLine("连接成功");
 
                 //创建一个登陆消息
-                var login = new Login2Gate
+                var login = new Login2Gate()
                 {
                     Account = $"TestClient",
                     Password = "123456"
@@ -63,11 +64,11 @@ namespace TestClient
 
                 //有返回值，这个是一个RPC过程，Exception在网络中传递
                 var resp = await remote.SendAsyncSafeAwait<Login2GateResult>(login);
-                if (resp.IsSuccess)
+                if (resp.Code == EnumRpcCallbackResultStatus.Success)
                 {
                     Console.WriteLine("登陆成功");
                 }
-                
+
                 //没有返回值，不是RPC过程
             }
             else
@@ -77,7 +78,7 @@ namespace TestClient
             }
         }
 
-        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(int messgaeId, object message, IReceiveMessage receiver)
+        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(int messgaeId,int rpcId, object message, IReceiveMessage receiver)
         {
             return default;
         }

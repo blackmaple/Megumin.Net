@@ -32,10 +32,10 @@ namespace Megumin.Message
         /// <summary>
         /// 消息包类型ID 字节长度
         /// </summary>
-        public const int RpcIDByteCount = sizeof(ushort);
+        public const int rpcIdByteCount = sizeof(ushort);
 
         /// <summary>
-        /// 报头初始偏移6, rpcID贴合在消息正文，不算报头。
+        /// 报头初始偏移6, rpcId贴合在消息正文，不算报头。
         /// </summary>
         public const int HeaderOffset = 2 + 4;
 
@@ -107,20 +107,20 @@ namespace Megumin.Message
 
                 if (await PreDeserialize(messageID, extraMessage, messageBody, bufferReceiver))
                 {
-                    var (rpcID, message) = Deserialize(messageID, messageBody);
+                    var (rpcId, message) = Deserialize(messageID, messageBody);
 
-                    if (await PostDeserialize(messageID, extraMessage, rpcID, message, bufferReceiver))
+                    if (await PostDeserialize(messageID, extraMessage, rpcId, message, bufferReceiver))
                     {
                         var post2 = CheckPost2ThreadScheduler(messageID, message);
                         if (post2)
                         {
-                            var resp = await MessageThreadTransducer.Push(messageID, rpcID, message, bufferReceiver);
+                            var resp = await MessageThreadTransducer.Push(messageID, rpcId, message, bufferReceiver);
 
-                            Reply(bufferReceiver, extraMessage, rpcID, resp);
+                            Reply(bufferReceiver, extraMessage, rpcId, resp);
                         }
                         else
                         {
-                            var resp = await bufferReceiver.Deal(messageID, rpcID, message);
+                            var resp = await bufferReceiver.Deal(messageID, rpcId, message);
 
                             if (resp is Task<object> task)
                             {
@@ -132,7 +132,7 @@ namespace Megumin.Message
                                 resp = await vtask;
                             }
 
-                            Reply(bufferReceiver, extraMessage, rpcID, resp);
+                            Reply(bufferReceiver, extraMessage, rpcId, resp);
                         }
                     }
                 }
@@ -159,9 +159,9 @@ namespace Megumin.Message
         /// <typeparam name="T"></typeparam>
         /// <param name="bufferReceiver"></param>
         /// <param name="extraMessage"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="resp"></param>
-        protected virtual void Reply<T>(T bufferReceiver, ReadOnlyMemory<byte> extraMessage, int rpcID, object resp)
+        protected virtual void Reply<T>(T bufferReceiver, ReadOnlyMemory<byte> extraMessage, int rpcId, object resp)
             where T : ISendMessage, IRemoteID, IUID<int>, IObjectMessageReceiver
         {
             if (resp != null)
@@ -169,7 +169,7 @@ namespace Megumin.Message
                 using (var routeTableWriter = new RoutingInformationModifier(extraMessage))
                 {
                     routeTableWriter.ReverseDirection();
-                    var b = Pack(rpcID * -1, resp, routeTableWriter);
+                    var b = Pack(rpcId * -1, resp, routeTableWriter);
                     bufferReceiver.SendAsync(b);
                 }
             }
@@ -241,12 +241,12 @@ namespace Megumin.Message
         /// <typeparam name="T"></typeparam>
         /// <param name="messageID"></param>
         /// <param name="extraMessage"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="bufferReceiver"></param>
         /// <returns></returns>
         public virtual ValueTask<bool> PostDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage,
-            int rpcID, object message, T bufferReceiver)
+            int rpcId, object message, T bufferReceiver)
             where T : ISendMessage, IRemoteID, IUID<int>, IObjectMessageReceiver
         {
             return new ValueTask<bool>(true);
@@ -259,17 +259,17 @@ namespace Megumin.Message
         /// <summary>
         /// 普通打包
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public virtual IMemoryOwner<byte> Pack(int rpcID, object message)
+        public virtual IMemoryOwner<byte> Pack(int rpcId, object message)
         {
             //序列化用buffer,使用内存池
             using (var memoryOwner = BufferPool.Rent(16384))
             {
                 Span<byte> span = memoryOwner.Memory.Span;
 
-                var (messageID, length) = Serialize(message, rpcID, span);
+                var (messageID, length) = Serialize(message, rpcId, span);
 
                 //这里进行拷贝并得到新的发送用buffer             此处省略了额外消息  
                 var sendbuffer = Pack(messageID, extraMessage: RoutingInformationModifier.Empty, span.Slice(0, length));
@@ -281,18 +281,18 @@ namespace Megumin.Message
         /// <summary>
         /// 转发打包
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        public virtual IMemoryOwner<byte> Pack(int rpcID, object message, int identifier)
+        public virtual IMemoryOwner<byte> Pack(int rpcId, object message, int identifier)
         {
             //序列化用buffer,使用内存池
             using (var memoryOwner = BufferPool.Rent(16384))
             {
                 Span<byte> span = memoryOwner.Memory.Span;
 
-                var (messageID, length) = Serialize(message, rpcID, span);
+                var (messageID, length) = Serialize(message, rpcId, span);
 
                 var routeTable = new RoutingInformationModifier(identifier);
                 var res = Pack(messageID, extraMessage: routeTable, span.Slice(0, length));
@@ -304,18 +304,18 @@ namespace Megumin.Message
         /// <summary>
         /// 返回消息打包
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="extraMessage"></param>
         /// <returns></returns>
-        public virtual IMemoryOwner<byte> Pack(int rpcID, object message, ReadOnlySpan<byte> extraMessage)
+        public virtual IMemoryOwner<byte> Pack(int rpcId, object message, ReadOnlySpan<byte> extraMessage)
         {
             //序列化用buffer,使用内存池
             using (var memoryOwner = BufferPool.Rent(16384))
             {
                 Span<byte> span = memoryOwner.Memory.Span;
 
-                var (messageID, length) = Serialize(message, rpcID, span);
+                var (messageID, length) = Serialize(message, rpcId, span);
 
                 return Pack(messageID, extraMessage, span.Slice(0, length));
             }
@@ -407,13 +407,13 @@ namespace Megumin.Message
         /// </summary>
         /// <param name="span"></param>
         /// <param name="message"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <returns></returns>
         public virtual (int messageID, ushort length)
-            Serialize(object message, int rpcID, Span<byte> span)
+            Serialize(object message, int rpcId, Span<byte> span)
         {
-            //rpcID直接附加值消息正文前4位。
-            rpcID.WriteTo(span);
+            //rpcId直接附加值消息正文前4位。
+            rpcId.WriteTo(span);
             var (messageID, length) = MessageLUT.Serialize(message, span.Slice(4));
             return (messageID, (ushort)(length + 4));
         }
@@ -422,11 +422,11 @@ namespace Megumin.Message
         /// 反序列化消息阶段
         /// </summary>
         /// <returns></returns>
-        public virtual (int rpcID, object message) Deserialize(int messageID, in ReadOnlyMemory<byte> messageBody)
+        public virtual (int rpcId, object message) Deserialize(int messageID, in ReadOnlyMemory<byte> messageBody)
         {
-            var rpcID = messageBody.Span.ReadInt();
+            var rpcId = messageBody.Span.ReadInt();
             var message = MessageLUT.Deserialize(messageID, messageBody.Slice(4));
-            return (rpcID, message);
+            return (rpcId, message);
         }
     }
 
@@ -458,7 +458,7 @@ namespace Megumin.Message
             throw new NotImplementedException();
         }
 
-        public override async ValueTask<bool> PostDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage, int rpcID, object message, T bufferReceiver)
+        public override async ValueTask<bool> PostDeserialize<T>(int messageID, ReadOnlyMemory<byte> extraMessage, int rpcId, object message, T bufferReceiver)
         {
             RoutingInformationModifier information = extraMessage;
             //当转发到路由表末尾时，寻找消息接收者，可能时Remote本身，也可能能是其他任意符合接口的对象。
@@ -474,13 +474,13 @@ namespace Megumin.Message
                 {
                     if (Post2ThreadScheduler)
                     {
-                        var resp = await MessageThreadTransducer.Push(messageID, rpcID, message, bufferReceiver);
+                        var resp = await MessageThreadTransducer.Push(messageID, rpcId, message, bufferReceiver);
 
-                        Reply(bufferReceiver, extraMessage, rpcID, resp);
+                        Reply(bufferReceiver, extraMessage, rpcId, resp);
                     }
                     else
                     {
-                        var resp = await bufferReceiver.Deal(messageID, rpcID, message);
+                        var resp = await bufferReceiver.Deal(messageID, rpcId, message);
 
                         if (resp is Task<object> task)
                         {
@@ -492,7 +492,7 @@ namespace Megumin.Message
                             resp = await vtask;
                         }
 
-                        Reply(bufferReceiver, extraMessage, rpcID, resp);
+                        Reply(bufferReceiver, extraMessage, rpcId, resp);
                     }
                     return false;
                 }

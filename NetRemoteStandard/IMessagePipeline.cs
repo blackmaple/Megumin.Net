@@ -36,26 +36,26 @@ namespace Megumin.Message
         /// <summary>
         /// object -> byte[]
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        IMemoryOwner<byte> Pack(int rpcID, object message);
+        IMemoryOwner<byte> Pack(int rpcId, object message);
         /// <summary>
         /// object -> byte[]
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        IMemoryOwner<byte> Pack(int rpcID, object message, int identifier);
+        IMemoryOwner<byte> Pack(int rpcId, object message, int identifier);
         /// <summary>
         /// object -> byte[]
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="extraMessage"></param>
         /// <returns></returns>
-        IMemoryOwner<byte> Pack(int rpcID, object message, ReadOnlySpan<byte> extraMessage);
+        IMemoryOwner<byte> Pack(int rpcId, object message, ReadOnlySpan<byte> extraMessage);
     }
 
     /// <summary>
@@ -67,10 +67,10 @@ namespace Megumin.Message
         /// 处理消息实例
         /// </summary>
         /// <param name="messageID"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        ValueTask<object> Deal(int messageID, int rpcID, object message);
+        ValueTask<object> Deal(int messageID, int rpcId, object message);
     }
 
     /// <summary>
@@ -84,14 +84,14 @@ namespace Megumin.Message
         /// <param name="messageID"></param>
         /// <param name="messageBody"></param>
         /// <returns></returns>
-        (int rpcID, object message) Deserialize(int messageID,in ReadOnlyMemory<byte> messageBody);
+        (int rpcId, object message) Deserialize(int messageID,in ReadOnlyMemory<byte> messageBody);
         /// <summary>
         /// 序列化
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        (int messageID, ushort length) Serialize(object message, int rpcID, Span<byte> span);
+        (int messageID, ushort length) Serialize(object message, int rpcId, Span<byte> span);
     }
 }

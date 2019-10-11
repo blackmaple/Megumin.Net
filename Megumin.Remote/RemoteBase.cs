@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Maple.CustomExplosions;
 using Megumin.Message;
 using Net.Remote;
 
@@ -63,11 +64,11 @@ namespace Megumin.Remote
         /// <summary>
         /// 正常发送入口
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal protected virtual void SendAsync(int rpcID, object message)
-            => SendAsync(MessagePipeline.Pack(rpcID, message));
+        internal protected virtual void SendAsync(int rpcId, object message)
+            => SendAsync(MessagePipeline.Pack(rpcId, message));
 
         /// <summary>
         /// 注意，发送完成时内部回收了buffer。
@@ -85,16 +86,16 @@ namespace Megumin.Remote
         {
             ReceiveStart();
 
-            var (rpcID, source) = RpcCallbackPool.Regist<RpcResult>();
+            var (rpcId, source) = RpcCallbackPool.Regist<RpcResult>();
 
             try
             {
-                SendAsync(rpcID, message);
+                SendAsync(rpcId, message);
                 return source;
             }
             catch (Exception e)
             {
-                RpcCallbackPool.TrySetException(rpcID * -1, e);
+                RpcCallbackPool.TrySetException(rpcId * -1, e);
                 return source;
             }
         }
@@ -110,11 +111,11 @@ namespace Megumin.Remote
         {
             ReceiveStart();
 
-            var (rpcID, source) = RpcCallbackPool.Regist<RpcResult>(OnException);
+            var (rpcId, source) = RpcCallbackPool.Regist<RpcResult>(OnException);
 
             try
             {
-                SendAsync(rpcID, message);
+                SendAsync(rpcId, message);
                 return source;
             }
             catch (Exception e)
@@ -124,6 +125,57 @@ namespace Megumin.Remote
                 return source;
             }
         }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message) where RpcResult : IRpcCallbackResult, new()
+        {
+            ReceiveStart();
+
+            var (rpcId, source) = RpcCallbackPool.MapleRegist<RpcResult>();
+
+            try
+            {
+                SendAsync(rpcId, message);
+                return source;
+            }
+            catch (Exception e)
+            {
+                RpcCallbackPool.TrySetException(rpcId * -1, e);
+                return source;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="rpcTimeOutMilliseconds"></param>
+        /// <returns></returns>
+        public IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message, int rpcTimeOutMilliseconds) where RpcResult : IRpcCallbackResult, new()
+        {
+            ReceiveStart();
+
+            var (rpcId, source) = RpcCallbackPool.MapleRegist<RpcResult>(rpcTimeOutMilliseconds);
+
+            try
+            {
+                SendAsync(rpcId, message);
+                return source;
+            }
+            catch (Exception e)
+            {
+                RpcCallbackPool.TrySetException(rpcId * -1, e);
+                return source;
+            }
+        }
+
     }
 
     /// <summary>
@@ -160,22 +212,22 @@ namespace Megumin.Remote
         /// 
         /// </summary>
         /// <param name="messgaeId"></param>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public ValueTask<object> Deal(int messgaeId, int rpcID, object message)
+        public ValueTask<object> Deal(int messgaeId, int rpcId, object message)
         {
-            if (rpcID < 0)
+            if (rpcId < 0)
             {
-                //这个消息是rpc返回（回复的RpcID为负数）
-                RpcCallbackPool?.TrySetResult(rpcID, message);
+                //这个消息是rpc返回（回复的rpcId为负数）
+                RpcCallbackPool?.TrySetResult(rpcId, message);
                 return new ValueTask<object>(result: null);
             }
             else
             {
                 //这个消息是非Rpc应答
                 //普通响应onRely
-                return DealMessage(messgaeId, message);
+                return DealMessage(messgaeId,  rpcId, message);
             }
         }
 
@@ -183,10 +235,11 @@ namespace Megumin.Remote
         /// 通常用户接收反序列化完毕的消息的函数
         /// </summary>
         /// <param name="messgaeId"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual ValueTask<object> DealMessage(int messgaeId, object message)
+        protected virtual ValueTask<object> DealMessage(int messgaeId,int rpcId, object message)
         {
             if (onReceive == null)
             {
@@ -194,7 +247,7 @@ namespace Megumin.Remote
             }
             else
             {
-                return onReceive.Invoke(messgaeId,message, this);
+                return onReceive.Invoke(messgaeId, rpcId,message, this);
             }
         }
 
@@ -238,11 +291,11 @@ namespace Megumin.Remote
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="identifier"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal protected virtual void SendAsync<T>(int rpcID, T message, int identifier)
+        internal protected virtual void SendAsync<T>(int rpcId, T message, int identifier)
             => SendAsync(MessagePipeline.Pack(0, message, identifier));
 
         /// <summary>
@@ -256,16 +309,16 @@ namespace Megumin.Remote
         {
             ReceiveStart();
 
-            var (rpcID, source) = RpcCallbackPool.Regist<RpcResult>();
+            var (rpcId, source) = RpcCallbackPool.Regist<RpcResult>();
 
             try
             {
-                SendAsync(rpcID, message, identifier);
+                SendAsync(rpcId, message, identifier);
                 return source;
             }
             catch (Exception e)
             {
-                RpcCallbackPool.TrySetException(rpcID * -1, e);
+                RpcCallbackPool.TrySetException(rpcId * -1, e);
                 return source;
             }
         }
@@ -282,11 +335,11 @@ namespace Megumin.Remote
         {
             ReceiveStart();
 
-            var (rpcID, source) = RpcCallbackPool.Regist<RpcResult>(OnException);
+            var (rpcId, source) = RpcCallbackPool.Regist<RpcResult>(OnException);
 
             try
             {
-                SendAsync(rpcID, message, identifier);
+                SendAsync(rpcId, message, identifier);
                 return source;
             }
             catch (Exception e)

@@ -2,6 +2,7 @@
 using MessagePack;
 using Megumin.Message;
 using ProtoBuf;
+using Maple.CustomExplosions;
 
 namespace Message
 {
@@ -77,13 +78,32 @@ namespace Message
     [MessageId(1004)]
     [ProtoContract]
     [MessagePackObject]
-    public class Login2GateResult
+    public class Login2GateResult: DefRpcCallbackResult
     {
-        /// <summary>
-        /// 
-        /// </summary>
+
+
         [ProtoMember(1)]
-        [Key(0)]
-        public bool IsSuccess { get; set; }
+        public string M { set; get; }
+
     }
+
+    /// <summary>
+    /// 所有的RPC调用应该继承这个
+    /// </summary>
+    
+    [MessageId(9999)]
+    [ProtoContract]
+    [ProtoInclude(3,typeof(Login2GateResult))]
+    public class DefRpcCallbackResult : IRpcCallbackResult
+    {
+        [ProtoMember(1)]
+        public EnumRpcCallbackResultStatus Code { set; get; }
+        [ProtoMember(2)]
+        public string Messge { set; get; }
+
+    }
+
+
+
+
 }

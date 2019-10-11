@@ -4,6 +4,7 @@ using Message;
 using Megumin;
 using Megumin.DCS;
 using Megumin.Message;
+using Maple.CustomExplosions;
 
 namespace ServerApp
 {
@@ -20,6 +21,7 @@ namespace ServerApp
         {
             //MessagePackLUT.Regist(typeof(Login).Assembly);
             Protobuf_netLUT.Regist(typeof(Login).Assembly);
+
             ThreadPool.QueueUserWorkItem((A) =>
             {
                 while (true)

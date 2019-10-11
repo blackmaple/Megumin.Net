@@ -16,33 +16,33 @@ namespace Maple.CustomCore
 
 
 
-        public virtual ValueTask<object> ReceiveCallback(int messageId, object message, IReceiveMessage receiver)
+        public virtual ValueTask<object> ReceiveCallback(int messageId,int rpcId, object message, IReceiveMessage receiver)
         {
             try
             {
                 if (this.DicCallback.TryGetValue(messageId, out var callback))
                 {
-                    callback?.Invoke(messageId, message, receiver);
+                    callback?.Invoke(messageId, rpcId, message, receiver);
                 }
                 else
                 {
-                    this.OnNotFound(messageId, message);
+                   
                 }
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine(ex.Message);
-                return this.OnException(messageId,ex);
+              
             }
             return default;
         }
 
-        protected virtual ValueTask<object> OnException(int messageId,Exception ex)
+        protected virtual ValueTask<object> OnException(int messageId, int rpcId, object message, Exception ex)
         {
             return default;
         }
 
-        protected virtual ValueTask<object> OnNotFound(int messageId, object message)
+        protected virtual ValueTask<object> OnNotFound(int messageId, int rpcId, object message )
         {
             return default;
         }

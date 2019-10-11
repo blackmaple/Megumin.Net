@@ -1,4 +1,5 @@
-﻿using Megumin.Message;
+﻿using Maple.CustomExplosions;
+using Megumin.Message;
 using Net.Remote;
 using System;
 using System.Collections.Generic;
@@ -39,18 +40,18 @@ namespace Megumin.Remote
         public int RpcTimeOutMilliseconds { get; set; } = 30000;
 
 
-        static readonly object lock_BuildRpcId = new object();
+        static readonly object lock_BuildrpcId = new object();
         int rpcCursor = 0;
 
         /// <summary>
-        /// 原子操作 取得RpcId,发送方的的RpcID为正数，回复的RpcID为负数，正负一一对应
+        /// 原子操作 取得rpcId,发送方的的rpcId为正数，回复的rpcId为负数，正负一一对应
         /// <para>0,int.MinValue 为无效值</para> 
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int GetRpcID()
+        int GetrpcId()
         {
-            lock (lock_BuildRpcId)
+            lock (lock_BuildrpcId)
             {
                 return (this.rpcCursor == int.MaxValue) ? (this.rpcCursor = 1) : (++this.rpcCursor);
             }
@@ -61,15 +62,15 @@ namespace Megumin.Remote
         /// </summary>
         /// <typeparam name="RpcResult"></typeparam>
         /// <returns></returns>
-        public (int rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
+        public (int rpcId, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>()
         {
-            var rpcID = GetRpcID();
-            var key = rpcID * -1;
+            var rpcId = GetrpcId();
+            var key = rpcId * -1;
 
             IMiniAwaitable<(RpcResult result, Exception exception)> source = MiniTask<(RpcResult result, Exception exception)>.Rent();
             this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
-                oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("rpcId overlaps and timeouts the previous callback/rpcId 重叠，对前一个回调进行超时处理"));
                 return (DateTime.Now, DefRpcCallBack);
             });
 
@@ -101,7 +102,7 @@ namespace Megumin.Remote
             }
             this.CreateCheckTimeout(key);
 
-            return (rpcID, source);
+            return (rpcId, source);
         }
 
         /// <summary>
@@ -110,10 +111,10 @@ namespace Megumin.Remote
         /// <typeparam name="RpcResult"></typeparam>
         /// <param name="OnException"></param>
         /// <returns></returns>
-        public (int rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
+        public (int rpcId, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException)
         {
-            var rpcID = GetRpcID();
-            var key = rpcID * -1;
+            var rpcId = GetrpcId();
+            var key = rpcId * -1;
 
             IMiniAwaitable<RpcResult> source = MiniTask<RpcResult>.Rent();
 
@@ -121,7 +122,7 @@ namespace Megumin.Remote
 
             this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
             {
-                oldValue.rpcCallback?.Invoke(default, new TimeoutException("RpcID overlaps and timeouts the previous callback/RpcID 重叠，对前一个回调进行超时处理"));
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("rpcId overlaps and timeouts the previous callback/rpcId 重叠，对前一个回调进行超时处理"));
                 return (DateTime.Now, DefRpcCallBack);
             });
 
@@ -157,84 +158,205 @@ namespace Megumin.Remote
 
             this.CreateCheckTimeout(key);
 
-            return (rpcID, source);
+            return (rpcId, source);
         }
+
+        /// <summary>
+        /// 这个RPC 注册 一定有会返回
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <returns></returns>
+        public (int rpcId, IMiniAwaitable<RpcResult> source) MapleRegist<RpcResult>() where RpcResult : IRpcCallbackResult, new()
+        {
+            var rpcId = GetrpcId();
+            var key = rpcId * -1;
+
+            IMiniAwaitable<RpcResult> source = MiniTask<RpcResult>.Rent();
+
+            //  CheckKeyConflict(key);
+
+            this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
+            {
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("rpcId overlaps and timeouts the previous callback/rpcId 重叠，对前一个回调进行超时处理"));
+                return (DateTime.Now, DefRpcCallBack);
+            });
+
+            void DefRpcCallBack(object resp, Exception ex)
+            {
+
+                if (ex == null  )
+                {
+                    if (resp is RpcResult result)
+                    {
+                        source.SetResult(result);
+                    }
+                    else if (resp is IRpcCallbackResult result1)
+                    {
+                        source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ServiceError });
+                    }
+                }
+           
+                else
+                {
+                    //再此处的异常 都来自客户端
+                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ClientError });
+                    // if (resp == null)
+                    //  {
+                    //   OnException?.Invoke(new NullReferenceException());
+                    //  }
+                    //  else
+                    //   {
+                    //转换类型错误
+                    //  OnException?.Invoke(new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +$"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}"));
+                    //   }
+                }
+
+            }
+
+            this.CreateCheckTimeout(key);
+
+            return (rpcId, source);
+
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="rpcTimeOutMilliseconds"></param>
+        /// <returns></returns>
+        public (int rpcId, IMiniAwaitable<RpcResult> source) MapleRegist<RpcResult>(int rpcTimeOutMilliseconds) where RpcResult : IRpcCallbackResult, new()
+        {
+
+            var rpcId = GetrpcId();
+            var key = rpcId * -1;
+
+            IMiniAwaitable<RpcResult> source = MiniTask<RpcResult>.Rent();
+
+            //  CheckKeyConflict(key);
+
+            this.AddOrUpdate(key, (DateTime.Now, DefRpcCallBack), (oldKey, oldValue) =>
+            {
+                oldValue.rpcCallback?.Invoke(default, new TimeoutException("rpcId overlaps and timeouts the previous callback/rpcId 重叠，对前一个回调进行超时处理"));
+                return (DateTime.Now, DefRpcCallBack);
+            });
+
+            void DefRpcCallBack(object resp, Exception ex)
+            {
+
+                if (ex == null && resp is RpcResult result)
+                {
+                    source.SetResult(result);
+                }
+                else
+                {
+                    //再此处的异常 都来自客户端
+                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ClientError });
+                    // if (resp == null)
+                    //  {
+                    //   OnException?.Invoke(new NullReferenceException());
+                    //  }
+                    //  else
+                    //   {
+                    //转换类型错误
+                    //  OnException?.Invoke(new InvalidCastException($"Return {resp.GetType()} type, cannot be converted to {typeof(RpcResult)}" +$"/返回{resp.GetType()}类型，无法转换为{typeof(RpcResult)}"));
+                    //   }
+                }
+
+            }
+
+            this.CreateCheckTimeout(rpcId, rpcTimeOutMilliseconds);
+
+            return (rpcId, source);
+        }
+
 
         /// <summary>
         /// 创建超时检查
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void CreateCheckTimeout(int rpcID)
+        void CreateCheckTimeout(int rpcId)
+        {
+            this.CreateCheckTimeout(rpcId, this.RpcTimeOutMilliseconds);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rpcId"></param>
+        /// <param name="rpcTimeOutMilliseconds"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void CreateCheckTimeout(int rpcId, int rpcTimeOutMilliseconds)
         {
             //备注：即使异步发送被同步调用，此处也不会发生错误。
             //同步调用，当返回消息返回时，会从回调池移除，
             //那么计时器结束时将不会找到Task。如果调用出没有保持Task引用，
             //那么Task会成为孤岛，被GC回收。
-
- 
-
             Task.Run(async () =>
             {
-                if (RpcTimeOutMilliseconds >= 0)
+                if (rpcTimeOutMilliseconds >= 0)
                 {
-                    await Task.Delay(RpcTimeOutMilliseconds);
-                    if (TryDequeue(rpcID, out var rpc))
+                    await Task.Delay(rpcTimeOutMilliseconds);
+                    if (TryDequeue(rpcId, out var rpc))
                     {
                         MessageThreadTransducer.Invoke(() =>
                         {
-                            rpc.rpcCallback?.Invoke(default, new TimeoutException($"The RPC {rpcID} callback timed out and did not get a remote response./RPC {rpcID} 回调超时，没有得到远端响应。"));
+                            rpc.rpcCallback?.Invoke(default, new TimeoutException($"The RPC {rpcId} callback timed out and did not get a remote response./RPC {rpcId} 回调超时，没有得到远端响应。"));
                         });
                     }
                 }
             });
         }
 
+
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="rpc"></param>
         /// <returns></returns>
-        public bool TryDequeue(int rpcID, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
+        public bool TryDequeue(int rpcId, out (DateTime startTime, Net.Remote.RpcCallback rpcCallback) rpc)
         {
-            return this.TryRemove(rpcID, out rpc);
+            return this.TryRemove(rpcId, out rpc);
         }
 
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public bool TrySetResult(int rpcID, object msg)
+        public bool TrySetResult(int rpcId, object msg)
         {
-            return TryComplate(rpcID, msg, default);
+            return TryComplate(rpcId, msg, default);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="exception"></param>
         /// <returns></returns>
-        public bool TrySetException(int rpcID, Exception exception)
+        public bool TrySetException(int rpcId, Exception exception)
         {
-            return TryComplate(rpcID, default, exception);
+            return TryComplate(rpcId, default, exception);
         }
 
-        bool TryComplate(int rpcID, object msg, Exception exception)
+        bool TryComplate(int rpcId, object msg, Exception exception)
         {
             //rpc响应
-            if (TryDequeue(rpcID, out var rpc))
+            if (TryDequeue(rpcId, out var rpc))
             {
                 rpc.rpcCallback?.Invoke(msg, exception);
                 return true;
             }
             return false;
         }
- 
+
     }
 
 

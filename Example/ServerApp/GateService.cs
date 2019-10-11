@@ -30,22 +30,22 @@ namespace ServerApp
         /// 
         /// </summary>
         /// <param name="messageId"></param>
+        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public static async ValueTask<object> DealMessage(int messageId,object message,IReceiveMessage receiver)
+        public static async ValueTask<object> DealMessage(int messageId, int rpcId, object message, IReceiveMessage receiver)
         {
             switch (message)
             {
                 case string str:
-                    Console.WriteLine (str);
+                    Console.WriteLine(str);
                     break;
                 case Login2Gate login:
-                    throw new Exception("登录失败");
                     Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
 
-                    Login2GateResult resp = new Login2GateResult();
-                    resp.IsSuccess = true;
+                    DefRpcCallbackResult resp = new DefRpcCallbackResult();
+                    resp.Code = Maple.CustomExplosions.EnumRpcCallbackResultStatus.Success;
                     return resp;
                 default:
                     break;
@@ -55,10 +55,10 @@ namespace ServerApp
 
         public void Update(double deltaTime)
         {
-            
+
         }
 
 
-          
+
     }
 }

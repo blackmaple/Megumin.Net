@@ -1,4 +1,5 @@
-﻿using Megumin.Message;
+﻿using Maple.CustomExplosions;
+using Megumin.Message;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -106,46 +107,60 @@ namespace Net.Remote
         /// </summary>
         int RpcTimeOutMilliseconds { get; set; }
         /// <summary>
-        /// 注册一个rpc过程，并返回一个rpcID，后续可通过rpcID完成回调
+        /// 注册一个rpc过程，并返回一个rpcId，后续可通过rpcId完成回调
         /// </summary>
         /// <typeparam name="RpcResult"></typeparam>
         /// <returns></returns>
-        (int rpcID, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>();
+        (int rpcId, IMiniAwaitable<(RpcResult result, Exception exception)> source) Regist<RpcResult>();
         /// <summary>
-        /// 注册一个rpc过程，并返回一个rpcID，后续可通过rpcID完成回调
+        /// 注册一个rpc过程，并返回一个rpcId，后续可通过rpcId完成回调
         /// </summary>
         /// <typeparam name="RpcResult"></typeparam>
         /// <param name="OnException"></param>
         /// <returns></returns>
-        (int rpcID, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException);
+        (int rpcId, IMiniAwaitable<RpcResult> source) Regist<RpcResult>(Action<Exception> OnException);
+        /// <summary>
+        /// 注册一个rpc过程，并返回一个rpcId，后续可通过rpcId完成回调
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <returns></returns>
+        (int rpcId, IMiniAwaitable<RpcResult> source) MapleRegist<RpcResult>() where RpcResult : IRpcCallbackResult, new();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="rpcTimeOutMilliseconds"></param>
+        /// <returns></returns>
+        (int rpcId, IMiniAwaitable<RpcResult> source) MapleRegist<RpcResult>(int rpcTimeOutMilliseconds) where RpcResult : IRpcCallbackResult, new();
+
         /// <summary>
         /// 取得rpc回调函数
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="rpc"></param>
         /// <returns></returns>
-        bool TryGetValue(int rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
+        bool TryGetValue(int rpcId, out (DateTime startTime, RpcCallback rpcCallback) rpc);
         /// <summary>
         /// 取得rpc回调函数，并从rpc回调池中移除
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="rpc"></param>
         /// <returns></returns>
-        bool TryDequeue(int rpcID, out (DateTime startTime, RpcCallback rpcCallback) rpc);
+        bool TryDequeue(int rpcId, out (DateTime startTime, RpcCallback rpcCallback) rpc);
         /// <summary>
         /// 触发rpc回调
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        bool TrySetResult(int rpcID, object msg);
+        bool TrySetResult(int rpcId, object msg);
         /// <summary>
         /// 触发rpc回调
         /// </summary>
-        /// <param name="rpcID"></param>
+        /// <param name="rpcId"></param>
         /// <param name="exception"></param>
         /// <returns></returns>
-        bool TrySetException(int rpcID, Exception exception);
+        bool TrySetException(int rpcId, Exception exception);
     }
 
     /// <summary>
@@ -182,6 +197,24 @@ namespace Net.Remote
         /// <exception cref="InvalidCastException">收到返回的消息，但类型不是<typeparamref name="RpcResult"/></exception>
         /// <remarks>可能会有内存泄漏，参考具体实现。也许这个方法应该叫UnSafe。</remarks>
         IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message, Action<Exception> OnException = null);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message) where RpcResult : IRpcCallbackResult, new();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="RpcResult"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="rpcTimeOutMilliseconds"></param>
+        /// <returns></returns>
+
+        IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message, int rpcTimeOutMilliseconds) where RpcResult : IRpcCallbackResult, new();
     }
 
     /// <summary>
@@ -227,11 +260,12 @@ namespace Net.Remote
     /// 
     /// </summary>
     /// <param name="messageId"></param>
+    /// <param name="rpcId"></param>
     /// <param name="message"></param>
     /// <param name="receiver"></param>
     /// <returns></returns>
-    public delegate ValueTask<object> ReceiveCallback (int messageId, object message,IReceiveMessage receiver);
-    
+    public delegate ValueTask<object> ReceiveCallback(int messageId,int rpcId, object message, IReceiveMessage receiver);
+
     /// <summary>
     /// 接收消息
     /// </summary>
@@ -251,8 +285,8 @@ namespace Net.Remote
     /// 应用网络层API封装
     /// </summary>
     public interface IRemote : IRemoteEndPoint, ISendMessage, IReceiveMessage,
-        IConnectable, IBroadCastSend, IDisposable,IUID<int>,IRemoteID
-        ,IAsyncSendMessage
+        IConnectable, IBroadCastSend, IDisposable, IUID<int>, IRemoteID
+        , IAsyncSendMessage
     {
 
         /// <summary>
@@ -269,14 +303,14 @@ namespace Net.Remote
     /// <summary>
     /// 转发器，用于分布式服务器中消息转发
     /// </summary>
-    public interface IForwarder:IRemoteID,ISendMessage
+    public interface IForwarder : IRemoteID, ISendMessage
     {
         /// <summary>
         /// 转发发送
         /// </summary>
         /// <param name="message"></param>
         /// <param name="identifier"></param>
-        void SendAsync(object message,int identifier);
+        void SendAsync(object message, int identifier);
         /// <summary>
         /// 转发发送
         /// </summary>
@@ -284,7 +318,7 @@ namespace Net.Remote
         /// <param name="message"></param>
         /// <param name="identifier"></param>
         /// <returns></returns>
-        IMiniAwaitable<(RpcResult result, Exception exception)> SendAsync<RpcResult>(object message,int identifier);
+        IMiniAwaitable<(RpcResult result, Exception exception)> SendAsync<RpcResult>(object message, int identifier);
         /// <summary>
         /// 转发发送
         /// </summary>
@@ -293,7 +327,7 @@ namespace Net.Remote
         /// <param name="identifier"></param>
         /// <param name="OnException"></param>
         /// <returns></returns>
-        IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message,int identifier, Action<Exception> OnException = null);
+        IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message, int identifier, Action<Exception> OnException = null);
     }
 
     /// <summary>

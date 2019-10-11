@@ -34,13 +34,13 @@ namespace Megumin.Message
             }
         }
 
-        internal static IMiniAwaitable<object> Push(int messgaeId,int rpcID, object message, IObjectMessageReceiver r)
+        internal static IMiniAwaitable<object> Push(int messgaeId,int rpcId, object message, IObjectMessageReceiver r)
         {
             MiniTask<object> task1 = MiniTask<object>.Rent();
             async void action()
             {
                 //此处可以忽略异常处理
-                var response = await r.Deal(messgaeId, rpcID, message);
+                var response = await r.Deal(messgaeId, rpcId, message);
 
                 if (response is Task<object> task)
                 {
