@@ -9,10 +9,16 @@ namespace Maple.CustomExplosions
     public class CallbackIdAttribute  :Attribute 
     {
         public CallbackIdAttribute(int messageId) : base()
-        { 
-        
+        {
+            this.ID = messageId;
         }
 
+        /// <summary>
+        /// 消息类唯一编号
+        /// </summary>
+        public int ID { get; }
+
+
     }
- 
+
 }

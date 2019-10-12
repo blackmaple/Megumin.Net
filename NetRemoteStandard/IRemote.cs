@@ -264,7 +264,7 @@ namespace Net.Remote
     /// <param name="message"></param>
     /// <param name="receiver"></param>
     /// <returns></returns>
-    public delegate ValueTask<object> ReceiveCallback(int messageId,int rpcId, object message, IReceiveMessage receiver);
+    public delegate ValueTask<object> ReceiveCallback(int messageId, object message, IReceiveMessage receiver);
 
     /// <summary>
     /// 接收消息

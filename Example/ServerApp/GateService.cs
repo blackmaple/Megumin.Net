@@ -5,6 +5,7 @@ using Megumin.DCS;
 using Megumin.Remote;
 using Net.Remote;
 using Megumin.Message;
+using Maple.CustomCore;
 
 namespace ServerApp
 {
@@ -19,9 +20,11 @@ namespace ServerApp
             StartListenAsync();
         }
 
+        ReceiveCallbackMgr ReceiveCallbackMgr = new ReceiveCallbackMgr();
+
         public async void StartListenAsync()
         {
-            var remote = await listener.ListenAsync(DealMessage);
+            var remote = await listener.ListenAsync(ReceiveCallbackMgr.ReceiveCallback);
             Console.WriteLine($"建立连接");
             StartListenAsync();
         }
@@ -30,11 +33,10 @@ namespace ServerApp
         /// 
         /// </summary>
         /// <param name="messageId"></param>
-        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public static async ValueTask<object> DealMessage(int messageId, int rpcId, object message, IReceiveMessage receiver)
+        public static async ValueTask<object> DealMessage(int messageId , object message, IReceiveMessage receiver)
         {
             switch (message)
             {

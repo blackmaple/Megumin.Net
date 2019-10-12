@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Example\Message\Message.csproj" />
     <ProjectReference Include="..\Maple.CustomExplosions\Maple.CustomExplosions.csproj" />
     <ProjectReference Include="..\NetRemoteStandard\NetRemoteStandard.csproj" />
   </ItemGroup>

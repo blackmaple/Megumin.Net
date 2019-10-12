@@ -66,9 +66,12 @@ namespace TestClient
                 var resp = await remote.SendAsyncSafeAwait<Login2GateResult>(login);
                 if (resp.Code == EnumRpcCallbackResultStatus.Success)
                 {
-                    Console.WriteLine("登陆成功");
+                    Console.WriteLine("登录成功");
                 }
-
+                else
+                {
+                    Console.WriteLine("登录失败");
+                }
                 //没有返回值，不是RPC过程
             }
             else
@@ -78,7 +81,7 @@ namespace TestClient
             }
         }
 
-        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(int messgaeId,int rpcId, object message, IReceiveMessage receiver)
+        private static System.Threading.Tasks.ValueTask<object> Remote_OnReceiveCallback(int messgaeId , object message, IReceiveMessage receiver)
         {
             return default;
         }

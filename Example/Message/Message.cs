@@ -91,7 +91,6 @@ namespace Message
     /// 所有的RPC调用应该继承这个
     /// </summary>
     
-   // [MessageId(9999)]
     [ProtoContract]
     [ProtoInclude(3,typeof(Login2GateResult))]
     [MessagePackObject]
@@ -102,7 +101,7 @@ namespace Message
         public EnumRpcCallbackResultStatus Code { set; get; }
         [ProtoMember(2)]
         [Key(1)]
-        public string Messge { set; get; }
+        public int MessgeId { set; get; }
 
     }
 

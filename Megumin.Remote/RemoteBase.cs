@@ -227,7 +227,7 @@ namespace Megumin.Remote
             {
                 //这个消息是非Rpc应答
                 //普通响应onRely
-                return DealMessage(messgaeId,  rpcId, message);
+                return DealMessage(messgaeId, message);
             }
         }
 
@@ -235,11 +235,10 @@ namespace Megumin.Remote
         /// 通常用户接收反序列化完毕的消息的函数
         /// </summary>
         /// <param name="messgaeId"></param>
-        /// <param name="rpcId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual ValueTask<object> DealMessage(int messgaeId,int rpcId, object message)
+        protected virtual ValueTask<object> DealMessage(int messgaeId, object message)
         {
             if (onReceive == null)
             {
@@ -247,7 +246,7 @@ namespace Megumin.Remote
             }
             else
             {
-                return onReceive.Invoke(messgaeId, rpcId,message, this);
+                return onReceive.Invoke(messgaeId,message, this);
             }
         }
 

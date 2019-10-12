@@ -191,7 +191,7 @@ namespace Megumin.Remote
                 else
                 {
                     //再此处的异常 都来自客户端
-                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ClientError });
+                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.Error });
                     // if (resp == null)
                     //  {
                     //   OnException?.Invoke(new NullReferenceException());
@@ -244,7 +244,7 @@ namespace Megumin.Remote
                 else
                 {
                     //再此处的异常 都来自客户端
-                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.ClientError });
+                    source.SetResult(new RpcResult() { Code = EnumRpcCallbackResultStatus.Error });
                     // if (resp == null)
                     //  {
                     //   OnException?.Invoke(new NullReferenceException());

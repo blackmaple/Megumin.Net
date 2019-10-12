@@ -19,15 +19,11 @@ namespace Megumin.Message
         /// <param name="messgaeId"></param>
         public MessageIdAttribute(int messgaeId):base(messgaeId)
         {
-            this.ID = messgaeId;
+            
         }
 
 
 
-        /// <summary>
-        /// 消息类唯一编号
-        /// </summary>
-        public int ID { get; }
 
         /// <summary>
         /// 

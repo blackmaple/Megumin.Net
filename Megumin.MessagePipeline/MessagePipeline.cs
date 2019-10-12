@@ -164,15 +164,14 @@ namespace Megumin.Message
         protected virtual void Reply<T>(T bufferReceiver, ReadOnlyMemory<byte> extraMessage, int rpcId, object resp)
             where T : ISendMessage, IRemoteID, IUID<int>, IObjectMessageReceiver
         {
-            if (resp != null)
+            if (resp == null)
             {
-                using (var routeTableWriter = new RoutingInformationModifier(extraMessage))
-                {
-                    routeTableWriter.ReverseDirection();
-                    var b = Pack(rpcId * -1, resp, routeTableWriter);
-                    bufferReceiver.SendAsync(b);
-                }
+                return;
             }
+            using var routeTableWriter = new RoutingInformationModifier(extraMessage);
+            routeTableWriter.ReverseDirection();
+            var b = Pack(rpcId * -1, resp, routeTableWriter);
+            bufferReceiver.SendAsync(b);
         }
 
         /// <summary>
