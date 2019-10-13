@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Maple.CustomStandard;
+using System;
 
 namespace Maple.CustomExplosions
 {
 
     public class RpcCallbackException : Exception
     {
-        public  virtual object Result { get;}
+        public  virtual ICustomMessageData Result { get;}
 
     }
 
@@ -16,7 +17,7 @@ namespace Maple.CustomExplosions
     {
         public   T Error { get; }
 
-        public override object Result => Error;
+        public override ICustomMessageData Result => Error;
 
         public RpcCallbackException()
         {

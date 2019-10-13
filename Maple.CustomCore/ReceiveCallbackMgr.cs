@@ -1,44 +1,56 @@
 ﻿using Maple.CustomExplosions;
+using Maple.CustomStandard;
 using Message;
 using Net.Remote;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Maple.CustomCore
 {
+
+
+    public delegate ValueTask<object> MapleReceiveCallback(int messageId, object message, IReceiveMessage receiver);
+ 
+
     /// <summary>
     /// 
     /// </summary>
     public class ReceiveCallbackMgr : IReceiveCallbackMgr
     {
-        private Dictionary<int, ReceiveCallback> DicCallback { get; }
+        private Dictionary<int, MapleReceiveCallback> DicCallback { get; }
 
         public ReceiveCallbackMgr()
         {
-            DicCallback = new Dictionary<int, ReceiveCallback>(4096);
+            DicCallback = new Dictionary<int, MapleReceiveCallback>(4096);
             Regist();
         }
-
 
         public void Regist()
         {
             var methods = this.GetType().GetMethods(
                 System.Reflection.BindingFlags.Instance
-                | System.Reflection.BindingFlags.Public
-                | System.Reflection.BindingFlags.Static
-                | System.Reflection.BindingFlags.NonPublic);
-
+                | System.Reflection.BindingFlags.Public 
+                | System.Reflection.BindingFlags.NonPublic |
+                 System.Reflection.BindingFlags.Static
+               );
+ 
+            var typeMethods = typeof(CallbackIdAttribute);
+            var typeDelegate = typeof(MapleReceiveCallback);
             foreach (var m in methods)
             {
-                var att = m.get.FirstAttribute<CallbackIdAttribute>();
-                if (att == null)
+                if (!(m.GetCustomAttributes(typeMethods, true).FirstOrDefault() is CallbackIdAttribute att))
                 {
                     continue;
                 }
+                // m.CreateDelegate(typeDelegate);
 
-                var callback = m.Invoke(null, null) as ReceiveCallback;
-                DicCallback.Add(att.ID, callback);
+                //var generics = m.GetGenericArguments();
+                //var generic = m.MakeGenericMethod(generics);
+                var callback = m.CreateDelegate(typeDelegate, this) as MapleReceiveCallback;
+
+                //  DicCallback.Add(att.ID, callback);
             }
         }
 
@@ -54,11 +66,15 @@ namespace Maple.CustomCore
             try
             {
                 this.OnMessgeExecuting(messageId);
-                return OnMessgeRunning(messageId, message, receiver);
+                this.OnMessgeRunning(messageId, message , receiver);
+                return default;
+
             }
             catch (Exception ex)
             {
-                return this.OnMessgeException(messageId, ex);
+                this.OnMessgeException(messageId, ex);
+                return default;
+
             }
             finally
             {
@@ -138,6 +154,7 @@ namespace Maple.CustomCore
             {
                 if (callback != null)
                 {
+                
                     return callback.Invoke(messageId, message, receiver);
                 }
                 else
@@ -151,11 +168,18 @@ namespace Maple.CustomCore
             }
         }
 
-        [CallbackId(1003)]
-        private ValueTask<object> Login(int messageId, object message, IReceiveMessage receiver)
+        [CallbackId(1003, typeof(Login2Gate), typeof(Login2GateResult))]
+        protected ValueTask<Login2GateResult> Login(int messageId, Login2Gate message, IReceiveMessage receiver)
         {
+             
             return default;
         }
+
+        //[CallbackId(1003, typeof(Login2Gate), typeof(ValueTask<Login2GateResult>))]
+        //protected ValueTask<object> Login1(int messageId, object message, IReceiveMessage receiver)
+        //{
+        //    return default;
+        //}
 
     }
 }

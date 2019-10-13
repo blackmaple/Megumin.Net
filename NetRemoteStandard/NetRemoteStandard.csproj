@@ -41,6 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Maple.CustomStandard\Maple.CustomStandard.csproj" />
     <ProjectReference Include="..\MessageStandard\MessageStandard.csproj" />
   </ItemGroup>
 

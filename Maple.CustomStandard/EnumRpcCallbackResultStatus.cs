@@ -1,4 +1,4 @@
-﻿namespace Maple.CustomExplosions
+﻿namespace Maple.CustomStandard
 {
     public enum EnumRpcCallbackResultStatus
     {

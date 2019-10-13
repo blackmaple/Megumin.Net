@@ -8,4 +8,9 @@
     <PackageReference Include="protobuf-net" Version="2.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Maple.CustomStandard\Maple.CustomStandard.csproj" />
+    <ProjectReference Include="..\MessageStandard\MessageStandard.csproj" />
+  </ItemGroup>
+
 </Project>

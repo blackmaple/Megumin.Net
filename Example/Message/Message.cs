@@ -1,8 +1,7 @@
-﻿using System;
-using MessagePack;
+﻿using Maple.CustomStandard;
 using Megumin.Message;
+using MessagePack;
 using ProtoBuf;
-using Maple.CustomExplosions;
 
 namespace Message
 {
@@ -55,7 +54,7 @@ namespace Message
     [MessageId(1003)]
     [ProtoContract]
     [MessagePackObject]
-    public class Login2Gate
+    public class Login2Gate:ICustomMessageData
     {
         /// <summary>
         /// 

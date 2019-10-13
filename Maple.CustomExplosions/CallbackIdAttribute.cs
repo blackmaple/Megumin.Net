@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Megumin.Message;
+using System;
 
 namespace Maple.CustomExplosions
 {
@@ -6,17 +7,25 @@ namespace Maple.CustomExplosions
     /// 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
-    public class CallbackIdAttribute  :Attribute 
+    public class CallbackIdAttribute : MessageIdAttribute
     {
-        public CallbackIdAttribute(int messageId) : base()
+        public CallbackIdAttribute(int id) : base(id)
         {
-            this.ID = messageId;
+
         }
 
-        /// <summary>
-        /// 消息类唯一编号
-        /// </summary>
-        public int ID { get; }
+
+        public CallbackIdAttribute(
+            int id,
+            Type argument
+            , Type resultType) : this(id)
+        {
+            this.Argument = argument;
+            this.ResultType = resultType;
+        }
+
+        public Type Argument { get; }
+        public Type ResultType { get; }
 
 
     }

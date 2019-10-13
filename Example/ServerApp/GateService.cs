@@ -1,11 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using Message;
+﻿using Maple.CustomCore;
+using Maple.CustomStandard;
 using Megumin.DCS;
 using Megumin.Remote;
+using Message;
 using Net.Remote;
-using Megumin.Message;
-using Maple.CustomCore;
+using System;
+using System.Threading.Tasks;
 
 namespace ServerApp
 {
@@ -47,7 +47,7 @@ namespace ServerApp
                     Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
 
                     Login2GateResult resp = new Login2GateResult();
-                    resp.Code = Maple.CustomExplosions.EnumRpcCallbackResultStatus.Success;
+                    resp.Code =  EnumRpcCallbackResultStatus.Success;
                     return resp;
                 default:
                     break;

@@ -45,9 +45,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Megumin.MessagePipeline", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CustomExplosions", "CustomExplosions", "{D77CE86E-0C96-44D1-BF9E-6889462D4907}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple.CustomExplosions", "Maple.CustomExplosions\Maple.CustomExplosions.csproj", "{178A3855-E32E-488E-AF51-A83DD293D0FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maple.CustomExplosions", "Maple.CustomExplosions\Maple.CustomExplosions.csproj", "{178A3855-E32E-488E-AF51-A83DD293D0FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple.CustomCore", "Maple.CustomCore\Maple.CustomCore.csproj", "{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maple.CustomCore", "Maple.CustomCore\Maple.CustomCore.csproj", "{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maple.CustomStandard", "Maple.CustomStandard\Maple.CustomStandard.csproj", "{EB653FD9-90CE-4DE0-B902-B8C102984970}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,10 @@ Global
 		{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB653FD9-90CE-4DE0-B902-B8C102984970}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB653FD9-90CE-4DE0-B902-B8C102984970}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB653FD9-90CE-4DE0-B902-B8C102984970}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB653FD9-90CE-4DE0-B902-B8C102984970}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -145,6 +151,7 @@ Global
 		{E53FAFBD-AC71-4773-BCCE-9B9686E671F8} = {11023560-B423-48FB-AFF2-844A97AB0EE0}
 		{178A3855-E32E-488E-AF51-A83DD293D0FA} = {D77CE86E-0C96-44D1-BF9E-6889462D4907}
 		{0FA8B041-29DA-43AE-90DB-6AF59ABFD1CC} = {D77CE86E-0C96-44D1-BF9E-6889462D4907}
+		{EB653FD9-90CE-4DE0-B902-B8C102984970} = {D77CE86E-0C96-44D1-BF9E-6889462D4907}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B793D369-B577-4DEE-89F7-9222CA0B98CD}

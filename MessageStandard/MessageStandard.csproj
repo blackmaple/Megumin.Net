@@ -47,8 +47,4 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Maple.CustomExplosions\Maple.CustomExplosions.csproj" />
-  </ItemGroup>
-
 </Project>
