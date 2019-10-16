@@ -6,7 +6,12 @@ namespace Maple.CustomExplosions
 
     public class RpcCallbackException : Exception
     {
-        public  virtual ICustomMessageData Result { get;}
+        public IRpcCallbackResult Result { get; }
+
+        public RpcCallbackException(IRpcCallbackResult result)
+        {
+
+        }
 
     }
 
@@ -15,25 +20,23 @@ namespace Maple.CustomExplosions
 
     public class RpcCallbackException<T> : RpcCallbackException where T : IRpcCallbackResult, new()
     {
-        public   T Error { get; }
 
-        public override ICustomMessageData Result => Error;
 
-        public RpcCallbackException()
+        public RpcCallbackException() : base(new T
         {
-            this.Error = new T
-            {
-                Code = EnumRpcCallbackResultStatus.Error
-            };
+            Code = EnumRpcCallbackResultStatus.Error
+        })
+        {
+
         }
 
-        public RpcCallbackException(int msgid)
+        public RpcCallbackException(int msgid) : base(new T
         {
-            this.Error = new T
-            {
-                Code = EnumRpcCallbackResultStatus.Error,
-                MessgeId = msgid
-            };
+            Code = EnumRpcCallbackResultStatus.Error,
+            MessgeId = msgid
+        })
+        {
+
         }
 
     }

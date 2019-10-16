@@ -15,17 +15,17 @@ namespace Maple.CustomExplosions
         }
 
 
-        public CallbackIdAttribute(
-            int id,
-            Type argument
-            , Type resultType) : this(id)
-        {
-            this.Argument = argument;
-            this.ResultType = resultType;
-        }
+        //public CallbackIdAttribute(
+        //    int id,
+        //    Type argument
+        //    , Type resultType) : this(id)
+        //{
+        //    this.Argument = argument;
+        //    this.ResultType = resultType;
+        //}
 
-        public Type Argument { get; }
-        public Type ResultType { get; }
+        //public Type Argument { get; }
+        //public Type ResultType { get; }
 
 
     }

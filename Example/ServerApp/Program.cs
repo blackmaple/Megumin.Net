@@ -19,9 +19,8 @@ namespace ServerApp
 
         private static async void InitServer()
         {
-          MessagePackLUT.Regist(typeof(Login).Assembly);
-            //  Protobuf_netLUT.Regist(typeof(Login).Assembly);
-
+            Protobuf_netLUT.Regist(typeof(Login).Assembly);
+ 
             ThreadPool.QueueUserWorkItem((A) =>
             {
                 while (true)

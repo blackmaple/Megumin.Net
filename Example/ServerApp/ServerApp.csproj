@@ -20,9 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\DCSContainer\DCSContainer.csproj" />
     <ProjectReference Include="..\..\Maple.CustomCore\Maple.CustomCore.csproj" />
-    <ProjectReference Include="..\..\MessagePackLUT\MessagePackLUT.csproj" />
     <ProjectReference Include="..\..\Protobuf-netLUT\Protobuf-netLUT.csproj" />
-    <ProjectReference Include="..\..\ProtobufLUT\ProtobufLUT.csproj" />
     <ProjectReference Include="..\Message\Message.csproj" />
   </ItemGroup>
 

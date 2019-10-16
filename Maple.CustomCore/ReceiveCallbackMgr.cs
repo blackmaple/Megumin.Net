@@ -11,14 +11,17 @@ namespace Maple.CustomCore
 {
 
 
-    public delegate ValueTask<object> MapleReceiveCallback(int messageId, object message, IReceiveMessage receiver);
- 
+
+
 
     /// <summary>
     /// 
     /// </summary>
     public class ReceiveCallbackMgr : IReceiveCallbackMgr
     {
+        public delegate ValueTask<object> MapleReceiveCallback(int messageId, object message, IReceiveMessage receiver);
+
+
         private Dictionary<int, MapleReceiveCallback> DicCallback { get; }
 
         public ReceiveCallbackMgr()
@@ -31,11 +34,11 @@ namespace Maple.CustomCore
         {
             var methods = this.GetType().GetMethods(
                 System.Reflection.BindingFlags.Instance
-                | System.Reflection.BindingFlags.Public 
+                | System.Reflection.BindingFlags.Public
                 | System.Reflection.BindingFlags.NonPublic |
                  System.Reflection.BindingFlags.Static
                );
- 
+
             var typeMethods = typeof(CallbackIdAttribute);
             var typeDelegate = typeof(MapleReceiveCallback);
             foreach (var m in methods)
@@ -44,13 +47,8 @@ namespace Maple.CustomCore
                 {
                     continue;
                 }
-                // m.CreateDelegate(typeDelegate);
-
-                //var generics = m.GetGenericArguments();
-                //var generic = m.MakeGenericMethod(generics);
                 var callback = m.CreateDelegate(typeDelegate, this) as MapleReceiveCallback;
-
-                //  DicCallback.Add(att.ID, callback);
+                DicCallback.Add(att.ID, callback);
             }
         }
 
@@ -61,24 +59,20 @@ namespace Maple.CustomCore
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public virtual ValueTask<object> ReceiveCallback(int messageId, object message, IReceiveMessage receiver)
+        public virtual async  ValueTask<object> ReceiveCallback(int messageId, object message, IReceiveMessage receiver)
         {
             try
             {
-                this.OnMessgeExecuting(messageId);
-                this.OnMessgeRunning(messageId, message , receiver);
-                return default;
-
+                this.OnMessgeExecuting(messageId, message, receiver);
+                return await  this.OnMessgeRunning(messageId, message, receiver);
             }
             catch (Exception ex)
             {
-                this.OnMessgeException(messageId, ex);
-                return default;
-
+                return this.OnMessgeException(messageId, message, receiver, ex);
             }
             finally
             {
-                this.OnMessgeExecuted(messageId);
+                this.OnMessgeExecuted(messageId, message, receiver);
             }
         }
 
@@ -89,7 +83,7 @@ namespace Maple.CustomCore
         /// <param name="messageId"></param>
         /// <param name="ex"></param>
         /// <returns></returns>
-        protected virtual ValueTask<object> OnMessgeException(int messageId, Exception ex)
+        protected virtual ValueTask<object> OnMessgeException(int messageId, object message, IReceiveMessage receiver, Exception ex)
         {
             System.Console.WriteLine(ex.Message);
             //rpc返回类型
@@ -106,10 +100,9 @@ namespace Maple.CustomCore
         /// <param name="messageId"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        protected virtual ValueTask<object> OnMessgeKeyNotFound(int messageId)
+        protected virtual void OnMessgeKeyNotFound(int messageId, object message, IReceiveMessage receiver)
         {
             Console.WriteLine($@"{messageId} {nameof(OnMessgeNullReference)}");
-            return default;
         }
 
         /// <summary>
@@ -117,17 +110,16 @@ namespace Maple.CustomCore
         /// </summary>
         /// <param name="messageId"></param>
         /// <returns></returns>
-        protected virtual ValueTask<object> OnMessgeNullReference(int messageId)
+        protected virtual void OnMessgeNullReference(int messageId, object message, IReceiveMessage receiver)
         {
             Console.WriteLine($@"{messageId} {nameof(OnMessgeNullReference)}");
-            return default;
         }
 
         /// <summary>
         /// 开始
         /// </summary>
         /// <param name="messageId"></param>
-        protected virtual void OnMessgeExecuting(int messageId)
+        protected virtual void OnMessgeExecuting(int messageId, object message, IReceiveMessage receiver)
         {
             Console.WriteLine($@"{messageId} {nameof(OnMessgeExecuting)}");
         }
@@ -136,7 +128,7 @@ namespace Maple.CustomCore
         /// 结束
         /// </summary>
         /// <param name="messageId"></param>
-        protected virtual void OnMessgeExecuted(int messageId)
+        protected virtual void OnMessgeExecuted(int messageId, object message, IReceiveMessage receiver)
         {
             Console.WriteLine($@"{messageId} {nameof(OnMessgeExecuted)}");
         }
@@ -154,32 +146,44 @@ namespace Maple.CustomCore
             {
                 if (callback != null)
                 {
-                
+                    Console.WriteLine($@"{messageId} {callback.Method.Name}");
                     return callback.Invoke(messageId, message, receiver);
                 }
                 else
                 {
-                    return this.OnMessgeNullReference(messageId);
+                    this.OnMessgeNullReference(messageId, message, receiver);
                 }
             }
             else
             {
-                return this.OnMessgeKeyNotFound(messageId);
+                this.OnMessgeKeyNotFound(messageId, message, receiver);
             }
-        }
-
-        [CallbackId(1003, typeof(Login2Gate), typeof(Login2GateResult))]
-        protected ValueTask<Login2GateResult> Login(int messageId, Login2Gate message, IReceiveMessage receiver)
-        {
-             
             return default;
         }
 
-        //[CallbackId(1003, typeof(Login2Gate), typeof(ValueTask<Login2GateResult>))]
-        //protected ValueTask<object> Login1(int messageId, object message, IReceiveMessage receiver)
-        //{
-        //    return default;
-        //}
+
+        private T_Message GetMessage<T_Message>(object message)
+        {
+            if (message is T_Message msg)
+            {
+                return msg;
+            }
+            throw new  InvalidCastException();
+        }
+
+
+        [CallbackId(1003)]
+        protected async ValueTask<object> Login(int messageId, object message, IReceiveMessage receiver)
+        {
+            var msg = this.GetMessage<Login2Gate >(message);
+            var data = new Login2GateResult() { Code = EnumRpcCallbackResultStatus.Success };
+            // return new ValueTask<object>(data);
+            throw new RpcCallbackException<Login2GateResult>(messageId);
+             return await Task.FromResult<object>(data);
+        }
 
     }
+
+
+
 }

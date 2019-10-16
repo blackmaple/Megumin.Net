@@ -5,12 +5,11 @@ using System.Text;
 
 namespace Maple.CustomCore
 {
-    public class UdpNatService
+    public class UdpNatService : UdpNatBase
     {
-        UdpClient  Udp { get; }
-        public UdpNatService(AddressFamily addressFamily = AddressFamily.InterNetwork)
-        {
-            this.Udp = new UdpClient(addressFamily);
+        public UdpNatService(int port) : base(port, AddressFamily.InterNetwork)
+        { 
+        
         }
     }
 }

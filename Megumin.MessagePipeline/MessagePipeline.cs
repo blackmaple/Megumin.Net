@@ -115,7 +115,7 @@ namespace Megumin.Message
                         if (post2)
                         {
                             var resp = await MessageThreadTransducer.Push(messageID, rpcId, message, bufferReceiver);
-
+ 
                             Reply(bufferReceiver, extraMessage, rpcId, resp);
                         }
                         else
@@ -293,10 +293,11 @@ namespace Megumin.Message
 
                 var (messageID, length) = Serialize(message, rpcId, span);
 
-                var routeTable = new RoutingInformationModifier(identifier);
-                var res = Pack(messageID, extraMessage: routeTable, span.Slice(0, length));
-                routeTable.Dispose();
-                return res;
+                using (var routeTable = new RoutingInformationModifier(identifier))
+                {
+                    var res = Pack(messageID, extraMessage: routeTable, span.Slice(0, length));
+                    return res;
+                }
             }
         }
 
