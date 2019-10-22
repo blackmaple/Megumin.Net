@@ -1,6 +1,6 @@
 ﻿using Megumin.Message;
 using Net.Remote;
-using System;
+using NetRemoteStandard;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -29,10 +29,10 @@ namespace Megumin.Remote
         /// </summary>
         /// <param name="port"></param>
         /// <param name="addressFamily"></param>
-        public UdpRemoteListener(int port,AddressFamily addressFamily = AddressFamily.InterNetworkV6)
+        public UdpRemoteListener(int port, AddressFamily addressFamily = AddressFamily.InterNetworkV6)
             : base(port, addressFamily)
         {
-            this.ConnectIPEndPoint = new IPEndPoint(IPAddress.None,port);
+            this.ConnectIPEndPoint = new IPEndPoint(IPAddress.None, port);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Megumin.Remote
         /// <param name="res"></param>
         private async void ReMappingAsync(UdpReceiveResult res)
         {
-            if (!connecting.TryGetValue(res.RemoteEndPoint,out var remote))
+            if (!connecting.TryGetValue(res.RemoteEndPoint, out var remote))
             {
                 remote = new UdpRemote(this.Client.AddressFamily);
                 connecting[res.RemoteEndPoint] = remote;
@@ -114,7 +114,7 @@ namespace Megumin.Remote
         /// </summary>
         /// <param name="receiveHandle"></param>
         /// <returns></returns>
-        public async Task<UdpRemote> ListenAsync(ReceiveCallback receiveHandle)
+        public async Task<UdpRemote> ListenAsync(IReceiveCallbackMgr  callbackMgr)
         {
             IsListening = true;
             System.Threading.ThreadPool.QueueUserWorkItem(state =>
@@ -137,8 +137,8 @@ namespace Megumin.Remote
 
             var res = await TaskCompletionSource.Task;
             TaskCompletionSource = null;
-            res.MessagePipeline = MessagePipeline.Default;
-            res.OnReceiveCallback += receiveHandle;
+            res.ReceiveCallbackMgr = callbackMgr;
+       
             res.ReceiveStart();
             return res;
         }
@@ -149,35 +149,35 @@ namespace Megumin.Remote
         /// <param name="receiveHandle"></param>
         /// <param name="pipline"></param>
         /// <returns></returns>
-        public async Task<UdpRemote> ListenAsync(ReceiveCallback receiveHandle,IMessagePipeline pipline)
-        {
-            IsListening = true;
-            System.Threading.ThreadPool.QueueUserWorkItem(state =>
-            {
-                AcceptAsync();
-            });
+        //public async Task<UdpRemote> ListenAsync(ReceiveCallback receiveHandle, IMessagePipeline pipline)
+        //{
+        //    IsListening = true;
+        //    System.Threading.ThreadPool.QueueUserWorkItem(state =>
+        //    {
+        //        AcceptAsync();
+        //    });
 
-            if (connected.TryDequeue(out var remote))
-            {
-                if (remote != null)
-                {
-                    remote.MessagePipeline = pipline;
-                    remote.ReceiveStart();
-                    return remote;
-                }
-            }
-            if (TaskCompletionSource == null)
-            {
-                TaskCompletionSource = new TaskCompletionSource<UdpRemote>();
-            }
+        //    if (connected.TryDequeue(out var remote))
+        //    {
+        //        if (remote != null)
+        //        {
+        //            remote.MessagePipeline = pipline;
+        //            remote.ReceiveStart();
+        //            return remote;
+        //        }
+        //    }
+        //    if (TaskCompletionSource == null)
+        //    {
+        //        TaskCompletionSource = new TaskCompletionSource<UdpRemote>();
+        //    }
 
-            var res = await TaskCompletionSource.Task;
-            TaskCompletionSource = null;
-            res.MessagePipeline = pipline;
-            res.OnReceiveCallback += receiveHandle;
-            res.ReceiveStart();
-            return res;
-        }
+        //    var res = await TaskCompletionSource.Task;
+        //    TaskCompletionSource = null;
+        //    res.MessagePipeline = pipline;
+        //    res.OnReceiveCallback += receiveHandle;
+        //    res.ReceiveStart();
+        //    return res;
+        //}
 
         /// <summary>
         /// 

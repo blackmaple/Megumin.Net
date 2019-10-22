@@ -1,6 +1,7 @@
 ﻿using Maple.CustomStandard;
 using Megumin.Message;
 using Net.Remote;
+using NetRemoteStandard;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;

@@ -1,6 +1,7 @@
 ﻿using Maple.CustomStandard;
 using Megumin.Message;
 using Net.Remote;
+using NetRemoteStandard;
 using System;
 using System.Buffers;
 using System.Net;
@@ -43,7 +44,12 @@ namespace Megumin.Remote
         /// <summary>
         /// 如果没有设置消息管道，使用默认消息管道。
         /// </summary>
-        public IMessagePipeline MessagePipeline { get; set; } = Message.MessagePipeline.Default;
+        public IMessagePipeline MessagePipeline => ReceiveCallbackMgr.MessagePipeline;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IReceiveCallbackMgr ReceiveCallbackMgr { set; get; }
     }
 
     /// 发送
@@ -237,37 +243,32 @@ namespace Megumin.Remote
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual ValueTask<object> DealMessage(int messgaeId, object message)
         {
-            if (onReceive == null)
-            {
-                return new ValueTask<object>(result: null);
-            }
-            else
-            {
-                return onReceive.Invoke(messgaeId,message, this);
-            }
+            return this.ReceiveCallbackMgr.ReceiveCallback(messgaeId, message, this);
         }
+
+
 
         /// <summary>
         /// 
         /// </summary>
-        protected ReceiveCallback onReceive;
+        //protected ReceiveCallback onReceive;
 
         /// <summary>
         /// 注意： 重写了注册函数，只能保存一个委托
         /// </summary>
-        public virtual event ReceiveCallback OnReceiveCallback
-        {
-            add
-            {
-                onReceive = value;
-            }
-            remove
-            {
-                onReceive -= value;
-            }
-        }
+        //public virtual event ReceiveCallback OnReceiveCallback
+        //{
+        //    add
+        //    {
+        //        onReceive = value;
+        //    }
+        //    remove
+        //    {
+        //        onReceive -= value;
+        //    }
+        //}
 
-  
+
     }
 
     ///路由

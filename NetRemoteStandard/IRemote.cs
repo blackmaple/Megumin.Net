@@ -1,5 +1,5 @@
-﻿using Maple.CustomStandard;
-using Megumin.Message;
+﻿using Megumin.Message;
+using NetRemoteStandard;
 using System;
 using System.Buffers;
 using System.Net;
@@ -277,7 +277,13 @@ namespace Net.Remote
         /// <summary>
         /// 
         /// </summary>
-        event ReceiveCallback OnReceiveCallback;
+        //     event ReceiveCallback OnReceiveCallback;
+        /// <summary>
+        /// 
+        /// </summary>
+          IReceiveCallbackMgr ReceiveCallbackMgr { set; get; }
+
+
     }
 
     /// <summary>

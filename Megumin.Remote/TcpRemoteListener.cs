@@ -1,5 +1,7 @@
-﻿using Megumin.Message;
+﻿using Maple.CustomStandard;
+using Megumin.Message;
 using Net.Remote;
+using NetRemoteStandard;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -62,35 +64,45 @@ namespace Megumin.Remote
             }
         }
 
-        /// <summary>
-        ///创建TCPRemote并ReceiveStart
-        /// </summary>
-        /// <returns></returns>
-        public async Task<TcpRemote> ListenAsync(ReceiveCallback receiveHandle)
+        public async Task<TcpRemote> ListenAsync(IReceiveCallbackMgr callbackMgr)
         {
             var remoteSocket = await Accept();
             var remote = new TcpRemote(remoteSocket);
-            remote.MessagePipeline = MessagePipeline.Default;
-            remote.OnReceiveCallback += receiveHandle;
+            remote.ReceiveCallbackMgr = callbackMgr;
             remote.ReceiveStart();
             return remote;
         }
 
-        /// <summary>
-        /// 创建TCPRemote并ReceiveStart.在ReceiveStart调用之前设置pipline,以免设置不及时漏掉消息.
-        /// </summary>
-        /// <param name="receiveHandle"></param>
-        /// <param name="pipline"></param>
-        /// <returns></returns>
-        public async Task<TcpRemote> ListenAsync(ReceiveCallback receiveHandle, IMessagePipeline pipline)
-        {
-            var remoteSocket = await Accept();
-            var remote = new TcpRemote(remoteSocket);
-            remote.MessagePipeline = pipline;
-            remote.OnReceiveCallback += receiveHandle;
-            remote.ReceiveStart();
-            return remote;
-        }
+
+        ///// <summary>
+        /////创建TCPRemote并ReceiveStart
+        ///// </summary>
+        ///// <returns></returns>
+        //public async Task<TcpRemote> ListenAsync(ReceiveCallback receiveHandle)
+        //{
+        //    var remoteSocket = await Accept();
+        //    var remote = new TcpRemote(remoteSocket);
+        //    remote.MessagePipeline = MessagePipeline.Default;
+        //    remote.OnReceiveCallback += receiveHandle;
+        //    remote.ReceiveStart();
+        //    return remote;
+        //}
+
+        ///// <summary>
+        ///// 创建TCPRemote并ReceiveStart.在ReceiveStart调用之前设置pipline,以免设置不及时漏掉消息.
+        ///// </summary>
+        ///// <param name="receiveHandle"></param>
+        ///// <param name="pipline"></param>
+        ///// <returns></returns>
+        //public async Task<TcpRemote> ListenAsync(ReceiveCallback receiveHandle, IMessagePipeline pipline)
+        //{
+        //    var remoteSocket = await Accept();
+        //    var remote = new TcpRemote(remoteSocket);
+        //    remote.MessagePipeline = pipline;
+        //    remote.OnReceiveCallback += receiveHandle;
+        //    remote.ReceiveStart();
+        //    return remote;
+        //}
 
         /// <summary>
         /// 

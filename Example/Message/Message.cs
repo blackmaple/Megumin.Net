@@ -1,6 +1,7 @@
 ﻿using Maple.CustomStandard;
 using Megumin.Message;
 using MessagePack;
+using NetRemoteStandard;
 using ProtoBuf;
 
 namespace Message

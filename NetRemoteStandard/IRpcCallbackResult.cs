@@ -1,4 +1,4 @@
-﻿namespace Maple.CustomStandard
+﻿namespace NetRemoteStandard
 {
     /// <summary>
     /// RPC的基类应该继承这个接口

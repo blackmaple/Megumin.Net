@@ -18,7 +18,7 @@ namespace Megumin.Remote
     /// <para>发送内存开销 对于TcpChannel实例 动态内存开销，取决于发送速度，内存实时占用为发送数据的1~2倍</para>
     /// <para>                  接收的常驻开销8kb*2,随着接收压力动态调整</para>
     /// </summary>
-    public partial class TcpRemote : RemoteBase,  IRemote
+    public partial class TcpRemote : RemoteBase, IRemote
     {
         /// <summary>
         /// 
@@ -42,8 +42,8 @@ namespace Megumin.Remote
         /// <para>SocketException: Protocol option not supported</para>
         /// http://www.schrankmonster.de/2006/04/26/system-net-sockets-socketexception-protocol-not-supported/
         /// </remarks>
-        public TcpRemote(AddressFamily addressFamily) 
-            : this(new Socket(addressFamily,SocketType.Stream, ProtocolType.Tcp))
+        public TcpRemote(AddressFamily addressFamily)
+            : this(new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp))
         {
 
         }
@@ -52,21 +52,21 @@ namespace Megumin.Remote
         /// 
         /// </summary>
         /// <param name="messagePipeline"></param>
-        public TcpRemote(IMessagePipeline messagePipeline) : this(new Socket(SocketType.Stream, ProtocolType.Tcp))
-        {
-            MessagePipeline = messagePipeline;
-        }
+        //public TcpRemote(IMessagePipeline messagePipeline) : this(new Socket(SocketType.Stream, ProtocolType.Tcp))
+        //{
+        //    MessagePipeline = messagePipeline;
+        //}
 
         /// <summary>
         /// /
         /// </summary>
         /// <param name="messagePipeline"></param>
         /// <param name="addressFamily"></param>
-        public TcpRemote(IMessagePipeline messagePipeline, AddressFamily addressFamily)
-            : this(new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp))
-        {
-            MessagePipeline = messagePipeline;
-        }
+        //public TcpRemote(IMessagePipeline messagePipeline, AddressFamily addressFamily)
+        //    : this(new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp))
+        //{
+        //    MessagePipeline = messagePipeline;
+        //}
 
         /// <summary>
         /// 使用一个已连接的Socket创建远端
@@ -170,7 +170,7 @@ namespace Megumin.Remote
     }
 
     ///连接 断开连接
-    partial class TcpRemote:IConnectable
+    partial class TcpRemote : IConnectable
     {
         /// <summary>
         /// 
@@ -252,7 +252,7 @@ namespace Megumin.Remote
         /// 
         /// </summary>
         protected readonly object sendlock = new object();
-        
+
         /// <summary>
         /// 注意，发送完成时内部回收了buffer。
         /// ((框架约定1)发送字节数组发送完成后由发送逻辑回收)
@@ -398,9 +398,7 @@ namespace Megumin.Remote
 
         void ReceiveComplete(object sender, SocketAsyncEventArgs args)
         {
-            IMemoryOwner<byte> owner = args.UserToken as IMemoryOwner<byte>;
-
-            try
+            using (IMemoryOwner<byte> owner = args.UserToken as IMemoryOwner<byte>)
             {
                 if (args.SocketError == SocketError.Success)
                 {
@@ -422,7 +420,7 @@ namespace Megumin.Remote
 
                     var list = ByteMessageList.Rent();
                     //由打包器处理分包
-                    var residual = MessagePipeline.CutOff(args.Buffer.AsSpan(0,totalValidLength), list);
+                    var residual = MessagePipeline.CutOff(args.Buffer.AsSpan(0, totalValidLength), list);
 
                     //租用新内存
                     var bfo = BufferPool.Rent(MaxBufferLength);
@@ -467,15 +465,9 @@ namespace Megumin.Remote
                     isReceiving = false;
                 }
             }
-            finally
-            {
-                //重构后的BufferPool改为申请时清零数据，所以出不清零，节省性能。
-                //owner.Memory.Span.Clear();
-                owner.Dispose();
-            }
         }
 
-        
+
         private void DealMessageAsync(List<IMemoryOwner<byte>> list)
         {
             if (list.Count == 0)
@@ -508,7 +500,7 @@ namespace Megumin.Remote
         {
             this.owner = memoryOwner;
             var memory = owner.Memory;
-            if (MemoryMarshal.TryGetArray<byte>(memory,out var sbuffer))
+            if (MemoryMarshal.TryGetArray<byte>(memory, out var sbuffer))
             {
                 SetBuffer(sbuffer.Array, sbuffer.Offset, sbuffer.Count);
             }

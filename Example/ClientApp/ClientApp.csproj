@@ -18,6 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Maple.CustomCore\Maple.CustomCore.csproj" />
     <ProjectReference Include="..\..\Megumin.Remote\Megumin.Remote.csproj" />
     <ProjectReference Include="..\..\Protobuf-netLUT\Protobuf-netLUT.csproj" />
     <ProjectReference Include="..\Message\Message.csproj" />

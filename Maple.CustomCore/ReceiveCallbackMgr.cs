@@ -1,7 +1,9 @@
 ﻿using Maple.CustomExplosions;
 using Maple.CustomStandard;
+using Megumin.Message;
 using Message;
 using Net.Remote;
+using NetRemoteStandard;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +21,15 @@ namespace Maple.CustomCore
     /// </summary>
     public class ReceiveCallbackMgr : IReceiveCallbackMgr
     {
+
+      
+
         public delegate ValueTask<object> MapleReceiveCallback(int messageId, object message, IReceiveMessage receiver);
 
 
         private Dictionary<int, MapleReceiveCallback> DicCallback { get; }
+
+        public IMessagePipeline MessagePipeline => Megumin.Message.MessagePipeline.Default;
 
         public ReceiveCallbackMgr()
         {
@@ -140,14 +147,14 @@ namespace Maple.CustomCore
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        protected ValueTask<object> OnMessgeRunning(int messageId, object message, IReceiveMessage receiver)
+        protected   ValueTask<object> OnMessgeRunning(int messageId, object message, IReceiveMessage receiver)
         {
             if (this.DicCallback.TryGetValue(messageId, out var callback))
             {
                 if (callback != null)
                 {
                     Console.WriteLine($@"{messageId} {callback.Method.Name}");
-                    return callback.Invoke(messageId, message, receiver);
+                    return   callback.Invoke(messageId, message, receiver);
                 }
                 else
                 {
@@ -168,18 +175,18 @@ namespace Maple.CustomCore
             {
                 return msg;
             }
-            throw new  InvalidCastException();
+            throw new InvalidCastException();
         }
 
 
         [CallbackId(1003)]
-        protected async ValueTask<object> Login(int messageId, object message, IReceiveMessage receiver)
+        protected   ValueTask<object> Login(int messageId, object message, IReceiveMessage receiver)
         {
-            var msg = this.GetMessage<Login2Gate >(message);
+            var msg = this.GetMessage<Login2Gate>(message);
             var data = new Login2GateResult() { Code = EnumRpcCallbackResultStatus.Success };
             // return new ValueTask<object>(data);
-            throw new RpcCallbackException<Login2GateResult>(messageId);
-             return await Task.FromResult<object>(data);
+     //       throw new RpcCallbackException<Login2GateResult>(messageId);
+            return new ValueTask<object>(data);
         }
 
     }

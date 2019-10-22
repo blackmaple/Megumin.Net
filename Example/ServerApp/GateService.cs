@@ -1,5 +1,4 @@
 ﻿using Maple.CustomCore;
-using Maple.CustomStandard;
 using Megumin.DCS;
 using Megumin.Remote;
 using Message;
@@ -24,7 +23,7 @@ namespace ServerApp
 
         public async void StartListenAsync()
         {
-            var remote = await listener.ListenAsync(ReceiveCallbackMgr.ReceiveCallback);
+            var remote = await listener.ListenAsync(new ReceiveCallbackMgr());
             Console.WriteLine($"建立连接");
             StartListenAsync();
         }
@@ -36,24 +35,24 @@ namespace ServerApp
         /// <param name="message"></param>
         /// <param name="receiver"></param>
         /// <returns></returns>
-        public static async ValueTask<object> DealMessage(int messageId , object message, IReceiveMessage receiver)
-        {
-            switch (message)
-            {
-                case string str:
-                    Console.WriteLine(str);
-                    break;
-                case Login2Gate login:
-                    Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
+        //public static async ValueTask<object> DealMessage(int messageId , object message, IReceiveMessage receiver)
+        //{
+        //    switch (message)
+        //    {
+        //        case string str:
+        //            Console.WriteLine(str);
+        //            break;
+        //        case Login2Gate login:
+        //            Console.WriteLine($"客户端登陆请求：{login.Account}-----{login.Password}");
 
-                    Login2GateResult resp = new Login2GateResult();
-                    resp.Code =  EnumRpcCallbackResultStatus.Success;
-                    return resp;
-                default:
-                    break;
-            }
-            return null;
-        }
+        //            Login2GateResult resp = new Login2GateResult();
+        //            resp.Code =  EnumRpcCallbackResultStatus.Success;
+        //            return resp;
+        //        default:
+        //            break;
+        //    }
+        //    return null;
+        //}
 
         public void Update(double deltaTime)
         {

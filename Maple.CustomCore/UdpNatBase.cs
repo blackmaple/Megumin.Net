@@ -4,19 +4,22 @@ using Net.Remote;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Maple.CustomCore
 {
-    public class UdpNatBase : ISendMessage, IAsyncSendMessage, IDisposable
+    public class UdpNatBase : IDisposable
     {
         UdpClient Udp { get; }
 
         public IMessagePipeline MessagePipeline { get; set; } = Megumin.Message.MessagePipeline.Default;
 
-
+        public bool IsListening { protected set; get; }
 
         public UdpNatBase(AddressFamily addressFamily)
         {
@@ -29,42 +32,68 @@ namespace Maple.CustomCore
             this.Udp.AllowNatTraversal(true);
         }
 
-
-
-
-        public void Dispose()
+        public void Start()
         {
+            System.Threading.ThreadPool.QueueUserWorkItem(state =>
+            {
+                AcceptAsync();
+            });
+        }
+
+        public void Close()
+        {
+            this.IsListening = false;
             this.Udp.Dispose();
         }
 
-        public void SendAsync(object message)
+        async void AcceptAsync()
         {
-            throw new NotImplementedException();
+            while (IsListening)
+            {
+                var data = await this.Udp.ReceiveAsync();
+                
+            }
         }
 
-        public void SendAsync(IMemoryOwner<byte> byteMessage)
+        public void Dispose()
         {
-            throw new NotImplementedException();
+            this.Close();
         }
 
-        public IMiniAwaitable<(RpcResult result, Exception exception)> SendAsync<RpcResult>(object message)
+        public async ValueTask<int> SendAsync(object message, params IPEndPoint[] ips)
         {
-            throw new NotImplementedException();
+            if (ips == null)
+            {
+                throw new ArgumentNullException(nameof(ips));
+            }
+            var length = ips.Length;
+            if (length == 0)
+            {
+                throw new ArgumentNullException(nameof(ips));
+            }
+
+            using (var owner = MessagePipeline.Pack(0, message))
+            {
+                if (MemoryMarshal.TryGetArray<byte>(owner.Memory, out var buffer) == false)
+                {
+                    return 0;
+                }
+                var tasks = new Task<int>[ips.Length];
+                var data = buffer.Array;
+                var count = buffer.Count;
+                for (int i = 0; i < length; ++i)
+                {
+                    tasks[i] = this.Udp.SendAsync(data, count, ips[i]);
+                }
+                var retData = await Task.WhenAll(tasks);
+                return retData.Sum();
+            }
         }
 
-        public IMiniAwaitable<RpcResult> SendAsyncSafeAwait<RpcResult>(object message, Action<Exception> OnException = null)
-        {
-            throw new NotImplementedException();
-        }
 
-        public IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message) where RpcResult : IRpcCallbackResult, new()
+        public virtual void OnSocketException(SocketError error)
         {
-            throw new NotImplementedException();
-        }
 
-        public IMiniAwaitable<RpcResult> MapleSendAsync<RpcResult>(object message, int rpcTimeOutMilliseconds) where RpcResult : IRpcCallbackResult, new()
-        {
-            throw new NotImplementedException();
         }
     }
 }

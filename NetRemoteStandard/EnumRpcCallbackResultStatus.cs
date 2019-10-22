@@ -1,4 +1,4 @@
-﻿namespace Maple.CustomStandard
+﻿namespace NetRemoteStandard
 {
     public enum EnumRpcCallbackResultStatus
     {

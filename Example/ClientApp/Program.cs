@@ -1,10 +1,13 @@
-﻿using Maple.CustomStandard;
+﻿using Maple.CustomCore;
+using Maple.CustomStandard;
 using Megumin.Message;
 using Megumin.Remote;
 using Message;
 using Net.Remote;
+using NetRemoteStandard;
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 
 namespace TestClient
@@ -13,6 +16,14 @@ namespace TestClient
     {
         static void Main(string[] args)
         {
+            //decimal.TryParse("               1.03", out var a);
+            //HttpClient c = new HttpClient();
+            //var str = "1212";
+            //var data = new StringContent(str, System.Text.Encoding.UTF8);
+            //var t = c.PostAsync("http://localhost:56727/api/boc/Save", data);
+            //var s = t.Result.Content.ReadAsStringAsync().Result;
+
+
             //将协议类的程序集注册进查找表中
             Protobuf_netLUT.Regist(typeof(Login).Assembly);
             //    Protobuf_netLUT.Regist(typeof(Login).Assembly);
@@ -48,7 +59,7 @@ namespace TestClient
         {
 
             var ex = await remote.ConnectAsync(new IPEndPoint(IPAddress.IPv6Loopback, 54321));
-            remote.OnReceiveCallback += Remote_OnReceiveCallback;
+            remote.ReceiveCallbackMgr = new ReceiveCallbackMgr();
             if (ex == null)
             {
                 //没有异常，连接成功
